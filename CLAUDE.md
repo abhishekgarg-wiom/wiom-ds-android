@@ -158,12 +158,15 @@ designsystem/src/main/
 
 ## 9. What to do when asked to build a new component
 
-1. **Ask for the Figma link** if not provided. Do not invent visual details.
-2. **Load skills** `wiom-design-foundations` and (if relevant) the component-specific skill (e.g., `wiom-input-fields`, `wiom-top-bar`).
-3. **Get Figma context** via the `mcp__figma__get_design_context` tool (user must select the node in Figma desktop first).
-4. **Check if Material Symbols Rounded has the required icons.** If yes, add to `WiomIcons`. If no, ask the user whether to create a custom drawable.
-5. **Follow checklist in Rule 5.**
-6. **Propose the version bump** when done (patch/minor/major).
+1. **Load `wiom-design-foundations`** — this is the **single source of truth** for colors, typography, spacing, radius, stroke, shadow, iconography. Every design decision cross-checks against it. (Note: `wiom-visual-skill` is a separate philosophy / principles document and is **not** used to drive component code — don't derive tokens or spacings from it.)
+2. **Load the component-specific skill** (e.g., `wiom-input-fields`, `wiom-top-bar`, `wiom-stepper`). These skills are the **per-component spec** and cite tokens that live in `wiom-design-foundations`.
+3. **Ask for the Figma link** if not provided. Do not invent visual details.
+4. **Get Figma context** via the `mcp__figma__get_design_context` tool (user must select the node in Figma desktop first).
+5. **Check if Material Symbols Rounded has the required icons.** If yes, add to `WiomIcons`. If no, ask the user whether to create a custom drawable.
+6. **Follow checklist in Rule 5.**
+7. **Propose the version bump** when done (patch/minor/major).
+
+**Rule of precedence when skills disagree:** `wiom-design-foundations` wins. If a component-specific skill cites a token value that differs from the foundation, treat it as a bug in the component skill and flag it — don't encode the drift.
 
 ---
 

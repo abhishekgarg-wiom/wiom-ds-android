@@ -1,6 +1,7 @@
 package com.wiom.designsystem.component.bottomsheet
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.wiom.designsystem.component.listitem.WiomListItem
 import com.wiom.designsystem.foundation.icon.WiomIcon
 import com.wiom.designsystem.foundation.icon.WiomIcons
 import com.wiom.designsystem.theme.WiomTheme
@@ -114,7 +114,9 @@ fun WiomBottomSheetHeader(
 
 /**
  * List item row tailored for a bottom sheet — icon in brand-tint circle + label + description + chevron.
- * A shorthand over [WiomListItem] with the bottom-sheet leading-icon aesthetic.
+ *
+ * Built inline (not via [WiomListItem]) because bottom-sheet rows use **space.xl (24dp)** horizontal
+ * padding per the wiom-bottomsheet skill, whereas normal list items use space.lg (16dp).
  */
 @Composable
 fun WiomBottomSheetListItem(
@@ -124,28 +126,41 @@ fun WiomBottomSheetListItem(
     description: String? = null,
     icon: Int? = null,
 ) {
-    WiomListItem(
-        primary = label,
-        secondary = description,
-        modifier = modifier,
-        onClick = onClick,
-        leadingIcon = icon?.let { iconId ->
-            {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(WiomTheme.colors.brand.primaryTint),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    WiomIcon(id = iconId, contentDescription = null, size = 20.dp, tint = WiomTheme.colors.brand.primary)
-                }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = WiomTheme.spacing.xl, vertical = WiomTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        icon?.let { iconId ->
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(WiomTheme.colors.brand.primaryTint),
+                contentAlignment = Alignment.Center,
+            ) {
+                WiomIcon(id = iconId, contentDescription = null, size = 20.dp, tint = WiomTheme.colors.brand.primary)
             }
-        },
-        trailingIcon = {
-            WiomIcon(id = WiomIcons.expandMore, contentDescription = null, size = 20.dp, tint = WiomTheme.colors.text.disabled)
-        },
-    )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs),
+        ) {
+            Text(text = label, style = WiomTheme.type.labelMd, color = WiomTheme.colors.text.primary)
+            description?.let {
+                Text(text = it, style = WiomTheme.type.bodySm, color = WiomTheme.colors.text.secondary)
+            }
+        }
+        WiomIcon(
+            id = WiomIcons.expandMore,
+            contentDescription = null,
+            size = 20.dp,
+            tint = WiomTheme.colors.text.disabled,
+        )
+    }
 }
 
 /** Illustration layout — 120dp brand-tint circle with 48dp icon + centered heading + subtext. */
@@ -160,8 +175,10 @@ fun WiomBottomSheetIllustration(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                horizontal = WiomTheme.spacing.xl,
-                vertical = WiomTheme.spacing.lg,
+                start = WiomTheme.spacing.xl,
+                end = WiomTheme.spacing.xl,
+                top = WiomTheme.spacing.lg,
+                bottom = WiomTheme.spacing.xl,
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),

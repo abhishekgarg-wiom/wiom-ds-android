@@ -122,7 +122,8 @@ fun WiomTopBar(
                     .padding(
                         start = WiomTheme.spacing.lg,
                         end = WiomTheme.spacing.lg,
-                        bottom = if (size == WiomTopBarSize.Large) WiomTheme.spacing.xxl else WiomTheme.spacing.md,
+                        top = if (size == WiomTopBarSize.Large) WiomTheme.spacing.md else WiomTheme.spacing.sm,
+                        bottom = if (size == WiomTopBarSize.Large) WiomTheme.spacing.xxl else WiomTheme.spacing.sm,
                     ),
             )
         }

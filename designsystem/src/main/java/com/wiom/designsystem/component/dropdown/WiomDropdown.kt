@@ -143,7 +143,7 @@ private fun DropdownField(
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = WiomTheme.spacing.lg, vertical = WiomTheme.spacing.md),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
     ) {
         leadingIcon?.invoke()
         Text(

@@ -46,6 +46,10 @@ import com.wiom.designsystem.component.pagination.WiomPaginationCounter
 import com.wiom.designsystem.component.pagination.WiomPaginationDotStyle
 import com.wiom.designsystem.component.pagination.WiomPaginationDots
 import com.wiom.designsystem.component.radio.WiomRadio
+import com.wiom.designsystem.component.stepper.WiomHorizontalStep
+import com.wiom.designsystem.component.stepper.WiomStepperHorizontal
+import com.wiom.designsystem.component.stepper.WiomStepperVertical
+import com.wiom.designsystem.component.stepper.WiomVerticalStep
 import com.wiom.designsystem.component.switch.WiomSwitch
 import com.wiom.designsystem.component.tabsfilters.WiomChip
 import com.wiom.designsystem.component.tabsfilters.WiomChipRow
@@ -100,6 +104,7 @@ private fun SampleScreen() {
             DropdownSection()
             TabsFiltersSection()
             PaginationSection()
+            StepperSection()
             BottomSheetSection()
         }
         NavBarFooter()
@@ -254,6 +259,32 @@ private fun PaginationSection() {
         WiomPaginationDots(total = 4, current = 2, style = WiomPaginationDotStyle.Expanded)
         WiomPaginationBars(total = 5, current = 3, counterLabel = "Step 3 of 5")
         WiomPaginationCounter(current = 3, total = 10, onPrev = {}, onNext = {})
+    }
+}
+
+@Composable
+private fun StepperSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg)) {
+        SectionTitle("Stepper")
+        WiomStepperHorizontal(
+            steps = listOf(
+                WiomHorizontalStep("Plan"),
+                WiomHorizontalStep("Method"),
+                WiomHorizontalStep("Confirm"),
+                WiomHorizontalStep("Pay"),
+                WiomHorizontalStep("Done"),
+            ),
+            currentStep = 3,
+        )
+        WiomStepperVertical(
+            steps = listOf(
+                WiomVerticalStep("Personal info", "Name, DOB, email verified"),
+                WiomVerticalStep("Address", "Installation address confirmed"),
+                WiomVerticalStep("Aadhaar", "Enter the OTP sent to your mobile"),
+                WiomVerticalStep("Selfie", "Clear photo in good lighting"),
+            ),
+            currentStep = 3,
+        )
     }
 }
 

@@ -22,7 +22,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.2.0")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.3.0")
 }
 ```
 
@@ -108,6 +108,7 @@ WiomIcon(
 | `WiomPillTabs` / `WiomUnderlineFilter` / `WiomChip` | 3-level filter system |
 | `WiomPagination` (Dots / Bars / Counter / ScrollIndicator) | Position indicator |
 | `WiomBottomSheet` (modal) | Contextual actions / confirmations |
+| `WiomStepperHorizontal` / `WiomStepperVertical` | Known 2–6 step sequence (wizards / status flows) |
 
 ### Icons
 15 Material Symbols Rounded drawables: search · cancel · close · check · phone · visibility / visibilityOff · checkCircle · error · warning · refresh · expandMore · arrowBack · menu · moreVert.

@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -118,14 +118,18 @@ fun WiomUnderlineFilter(
                         color = if (selected) WiomTheme.colors.brand.primary else WiomTheme.colors.text.secondary,
                         maxLines = 1,
                     )
-                    Box(
-                        modifier = Modifier
-                            .padding(top = WiomTheme.spacing.sm)
-                            .width(if (selected) 64.dp else 0.dp)
-                            .clip(RoundedCornerShape(WiomTheme.radius.full))
-                            .background(WiomTheme.colors.brand.primary)
-                            .defaultMinSize(minHeight = WiomTheme.stroke.medium),
-                    )
+                    // Underline hugs the text width — Column's cross-axis = CenterHorizontally,
+                    // so a fillMaxWidth() child becomes text-width at the next layout pass.
+                    if (selected) {
+                        Box(
+                            modifier = Modifier
+                                .padding(top = WiomTheme.spacing.sm)
+                                .fillMaxWidth()
+                                .height(WiomTheme.stroke.medium)
+                                .clip(RoundedCornerShape(WiomTheme.radius.full))
+                                .background(WiomTheme.colors.brand.primary),
+                        )
+                    }
                 }
             }
         }

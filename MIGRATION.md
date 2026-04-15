@@ -41,7 +41,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.2.0")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.3.0")
 }
 ```
 
@@ -302,7 +302,7 @@ Harmless — Git converts LF/CRLF automatically. Ignore.
 When a new version ships (say v0.2.0), update your `build.gradle.kts`:
 
 ```kotlin
-implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.2.0")
+implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.3.0")
 ```
 
 Then:

@@ -26,6 +26,29 @@ Use this version. **v0.1.0 does not build**; v0.1.1 is the first usable release.
 - Detekt lint rule enforcing token-only values
 - More Material Symbols Rounded drawables as components need them
 
+## [0.3.0] — 2026-04-15
+
+Spacing audit + new component. Authoritative design source clarified.
+
+### Added
+
+- **`WiomStepper`** (from new `wiom-stepper` skill) — `WiomStepperHorizontal` for 2–6 step wizards with 1–2 word labels, `WiomStepperVertical` for status flows with per-step title + description + optional action slot (accepts any composable — a button, tertiary CTA, inline `WiomInput`, OTP field). `WiomStepIndicator` exposed as the shared atom. 4 states: Completed / Active / Upcoming / Error.
+- New icon: `WiomIcons.priorityHigh` (for Error state indicator). Material Symbols Rounded drawable added.
+- Sample app includes a Stepper section showing horizontal and vertical layouts.
+
+### Fixed — spacing audit
+
+- **`WiomDropdown`:** field slot gap was `space.md` (12dp); should be `space.sm` (8dp) per wiom-dropdown skill.
+- **`WiomTopBar` (Medium):** title was missing top padding, clipping close to the action row. Added `space.sm` top.
+- **`WiomTopBar` (Large):** title was missing top padding. Added `space.md` top to match the skill's `space/12 top + 44lh + space/32 bottom = 88dp` title area.
+- **`WiomUnderlineFilter`:** active indicator was a fixed 64dp width; now uses `fillMaxWidth()` inside a center-aligned column, so the underline hugs the label instead of overshooting/undershooting.
+- **`WiomBottomSheetListItem`:** was wrapping `WiomListItem` and inheriting its 16dp horizontal padding; skill calls for 24dp inside bottom sheets. Rebuilt inline with `space.xl` padding so sheet content aligns under the 24dp header left inset.
+- **`WiomBottomSheetIllustration`:** bottom padding was `space.lg` (16dp); skill specifies `space/24` bottom. Changed to `space.xl`.
+
+### Changed — guidance
+
+- `CLAUDE.md` updated: **`wiom-design-foundations` is the single source of truth** for tokens; `wiom-visual-skill` is explicitly noted as a principles document, not a token source. Rule of precedence added: when a component skill disagrees with the foundation, flag it — don't encode the drift.
+
 ## [0.2.0] — 2026-04-15
 
 All 13 components from the Wiom skill set are now in the library.

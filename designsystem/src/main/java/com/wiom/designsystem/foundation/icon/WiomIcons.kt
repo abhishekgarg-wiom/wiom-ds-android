@@ -30,4 +30,5 @@ object WiomIcons {
     @DrawableRes val arrowBack: Int = R.drawable.wiom_ic_arrow_back
     @DrawableRes val menu: Int = R.drawable.wiom_ic_menu
     @DrawableRes val moreVert: Int = R.drawable.wiom_ic_more_vert
+    @DrawableRes val priorityHigh: Int = R.drawable.wiom_ic_priority_high
 }
