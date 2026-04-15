@@ -20,12 +20,30 @@ Use this version. **v0.1.0 does not build**; v0.1.1 is the first usable release.
 ## [Unreleased]
 
 ### Planned
-- `WiomCta` (button) — skill pending user's updated spec
 - Standard (non-modal, persistent) bottom sheet
 - Google Fonts provider for Noto Sans
 - Paparazzi screenshot testing
 - Detekt lint rule enforcing token-only values
 - More Material Symbols Rounded drawables as components need them
+
+## [0.2.0] — 2026-04-15
+
+All 13 components from the Wiom skill set are now in the library.
+
+### Added
+
+- **`WiomButton`** — the CTA primitive, from `wiom-cta` skill. 4 types (Primary / Secondary / Tertiary / Destructive) × 3 interaction states (default / pressed / disabled) + loading state with inline spinner. Optional leading or trailing icon (via `WiomButtonIcon.Leading` / `.Trailing`). Intrinsic sizing (`defaultMinSize(minHeight = 48dp)`) so touch target is preserved but text never wraps/truncates/shrinks when the user scales system font.
+- **`WiomAcknowledge`** — 1st-person checkbox row that gates its paired `WiomButton`. Use for irreversible actions, terms/policy acceptance, verified-data submission.
+- Sample app now includes a Buttons section demonstrating all 4 types, loading state, and the Acknowledge → Primary flow.
+
+### Rules enforced by the component
+
+- Max 2 CTAs per screen/sheet/dialog (library doesn't enforce — reviewer/designer responsibility).
+- Text never wraps: `maxLines = 1`.
+- No shadow — flat.
+- Min 48dp touch target via `defaultMinSize` (grows with font scale, never pinned).
+- Pressed state uses `primary-pressed` / `primary-subtle` / `negative-primary-pressed` per type.
+- Secondary border is always `stroke.medium` (2dp).
 
 ## [0.1.0] — 2026-04-15
 

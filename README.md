@@ -22,7 +22,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.1.1")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.2.0")
 }
 ```
 
@@ -91,10 +91,11 @@ WiomIcon(
 ### Foundations
 43 color tokens · 13 typography tokens · 13 spacing tokens · 7 radius tokens · 2 stroke tokens · 5 shadow tokens · 4 icon size tokens. Wrapped in `WiomTheme { }`.
 
-### Components (12 built, 1 deferred)
+### Components (all 13 built)
 
 | Component | Purpose |
 |---|---|
+| `WiomButton` + `WiomAcknowledge` | Primary / Secondary / Tertiary / Destructive CTAs + acknowledge-gated flow |
 | `WiomBadge` (Dot / Count / Label) | Status indicator |
 | `WiomCheckbox` | Binary / multi-select form control |
 | `WiomRadio` | Single-choice from a group |
@@ -107,7 +108,6 @@ WiomIcon(
 | `WiomPillTabs` / `WiomUnderlineFilter` / `WiomChip` | 3-level filter system |
 | `WiomPagination` (Dots / Bars / Counter / ScrollIndicator) | Position indicator |
 | `WiomBottomSheet` (modal) | Contextual actions / confirmations |
-| `WiomCta` (button) | **Deferred** — updated spec coming |
 
 ### Icons
 15 Material Symbols Rounded drawables: search · cancel · close · check · phone · visibility / visibilityOff · checkCircle · error · warning · refresh · expandMore · arrowBack · menu · moreVert.

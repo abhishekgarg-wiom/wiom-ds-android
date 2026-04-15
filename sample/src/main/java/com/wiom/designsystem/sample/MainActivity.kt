@@ -30,6 +30,10 @@ import com.wiom.designsystem.component.badge.WiomBadgeStyle
 import com.wiom.designsystem.component.bottomsheet.WiomBottomSheet
 import com.wiom.designsystem.component.bottomsheet.WiomBottomSheetHeader
 import com.wiom.designsystem.component.bottomsheet.WiomBottomSheetListItem
+import com.wiom.designsystem.component.button.WiomAcknowledge
+import com.wiom.designsystem.component.button.WiomButton
+import com.wiom.designsystem.component.button.WiomButtonIcon
+import com.wiom.designsystem.component.button.WiomButtonType
 import com.wiom.designsystem.component.checkbox.WiomCheckbox
 import com.wiom.designsystem.component.dropdown.WiomDropdown
 import com.wiom.designsystem.component.dropdown.WiomDropdownOption
@@ -86,6 +90,7 @@ private fun SampleScreen() {
                 .padding(WiomTheme.spacing.lg),
             verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xl),
         ) {
+            ButtonsSection()
             BadgesSection()
             CheckboxSection()
             RadioSection()
@@ -104,6 +109,21 @@ private fun SampleScreen() {
 @Composable
 private fun SectionTitle(text: String) {
     Text(text = text, style = WiomTheme.type.headingMd, color = WiomTheme.colors.text.primary)
+}
+
+@Composable
+private fun ButtonsSection() {
+    var ack by remember { mutableStateOf(false) }
+    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md)) {
+        SectionTitle("Buttons")
+        WiomButton(text = "भुगतान करें", onClick = {}, type = WiomButtonType.Primary)
+        WiomButton(text = "वापस जाएं", onClick = {}, type = WiomButtonType.Secondary)
+        WiomButton(text = "Maybe later", onClick = {}, type = WiomButtonType.Tertiary)
+        WiomButton(text = "Delete plan", onClick = {}, type = WiomButtonType.Destructive, icon = WiomButtonIcon.Leading(WiomIcons.cancel))
+        WiomButton(text = "Processing…", onClick = {}, type = WiomButtonType.Primary, loading = true)
+        WiomAcknowledge(text = "मैंने सभी जानकारी सही दी है", checked = ack, onCheckedChange = { ack = it })
+        WiomButton(text = "Submit", onClick = {}, type = WiomButtonType.Primary, enabled = ack)
+    }
 }
 
 @Composable

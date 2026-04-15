@@ -41,7 +41,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.1.1")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.2.0")
 }
 ```
 
@@ -149,7 +149,9 @@ Typical hardcoded patterns you'll find in an existing Wiom app and their Wiom DS
 
 | You have | Replace with |
 |---|---|
-| Custom `Button` composable or `Material3 Button` with brand hex | **`WiomCta` — coming in v0.2.0.** Until then, keep your current button but replace its color with `WiomTheme.colors.brand.primary` and typography with `WiomTheme.type.labelLg`. |
+| Custom `Button` composable or `Material3 Button` with brand hex | `WiomButton(text, onClick, type = WiomButtonType.Primary / Secondary / Tertiary / Destructive)` |
+| Button with loading state | `WiomButton(text, onClick, loading = true)` — spinner replaces text |
+| Terms / policy checkbox gating a submit button | `WiomAcknowledge(text, checked, onCheckedChange)` + `WiomButton(enabled = checked)` |
 
 ### Inputs
 
