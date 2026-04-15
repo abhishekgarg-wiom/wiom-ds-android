@@ -26,12 +26,8 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
+    // Note: publishing is configured by com.vanniktech.maven.publish plugin.
+    // Don't add `android.publishing { singleVariant("release") }` here — it conflicts.
 }
 
 dependencies {
