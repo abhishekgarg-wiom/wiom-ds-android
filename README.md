@@ -22,7 +22,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.0.1")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.1.0")
 }
 ```
 
@@ -86,18 +86,37 @@ WiomIcon(
 
 ---
 
-## What's in v0.0.1
+## What's in v0.1.0
 
-- Foundations: 43 color tokens, 13 typography tokens, 13 spacing tokens, 7 radius tokens, 2 stroke tokens, 5 shadow tokens, 4 icon size tokens
-- `WiomTheme` composable + `WiomTheme.*` token accessor
-- `WiomIcon` + `WiomIcons` facade with 10 Material Symbols Rounded drawables
-- Material3 bridge — Material components pick up approximate Wiom colors
+### Foundations
+43 color tokens · 13 typography tokens · 13 spacing tokens · 7 radius tokens · 2 stroke tokens · 5 shadow tokens · 4 icon size tokens. Wrapped in `WiomTheme { }`.
+
+### Components (12 built, 1 deferred)
+
+| Component | Purpose |
+|---|---|
+| `WiomBadge` (Dot / Count / Label) | Status indicator |
+| `WiomCheckbox` | Binary / multi-select form control |
+| `WiomRadio` | Single-choice from a group |
+| `WiomSwitch` | Instant-apply on/off toggle |
+| `WiomInput` / `WiomTextarea` | Form field (phone, OTP, search, currency, password, address) |
+| `WiomListItem` | Unified list row |
+| `WiomTopBar` | Screen header (Small / Medium / Large) |
+| `WiomNavigationBar` | Bottom tab bar (2–5 tabs) |
+| `WiomDropdown` | Single-select picker |
+| `WiomPillTabs` / `WiomUnderlineFilter` / `WiomChip` | 3-level filter system |
+| `WiomPagination` (Dots / Bars / Counter / ScrollIndicator) | Position indicator |
+| `WiomBottomSheet` (modal) | Contextual actions / confirmations |
+| `WiomCta` (button) | **Deferred** — updated spec coming |
+
+### Icons
+15 Material Symbols Rounded drawables: search · cancel · close · check · phone · visibility / visibilityOff · checkCircle · error · warning · refresh · expandMore · arrowBack · menu · moreVert.
 
 ### Coming next
-
-- `WiomInput` — input, textarea, OTP, search, mobile, password (see `wiom-input-fields` skill)
-- `WiomButton` — primary, secondary, destructive, ghost
-- `WiomTopBar` — Small/Medium/Large × 4 states
+- `WiomCta` (button) — updated skill pending
+- Noto Sans via Google Fonts provider
+- Paparazzi screenshot tests
+- Detekt lint rule
 - More icons as components need them
 
 ---

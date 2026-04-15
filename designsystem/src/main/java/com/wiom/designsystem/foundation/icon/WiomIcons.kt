@@ -18,6 +18,7 @@ object WiomIcons {
     @DrawableRes val search: Int = R.drawable.wiom_ic_search
     @DrawableRes val cancel: Int = R.drawable.wiom_ic_cancel
     @DrawableRes val close: Int = R.drawable.wiom_ic_close
+    @DrawableRes val check: Int = R.drawable.wiom_ic_check
     @DrawableRes val phone: Int = R.drawable.wiom_ic_phone
     @DrawableRes val visibility: Int = R.drawable.wiom_ic_visibility
     @DrawableRes val visibilityOff: Int = R.drawable.wiom_ic_visibility_off
@@ -26,4 +27,7 @@ object WiomIcons {
     @DrawableRes val warning: Int = R.drawable.wiom_ic_warning
     @DrawableRes val refresh: Int = R.drawable.wiom_ic_refresh
     @DrawableRes val expandMore: Int = R.drawable.wiom_ic_expand_more
+    @DrawableRes val arrowBack: Int = R.drawable.wiom_ic_arrow_back
+    @DrawableRes val menu: Int = R.drawable.wiom_ic_menu
+    @DrawableRes val moreVert: Int = R.drawable.wiom_ic_more_vert
 }
