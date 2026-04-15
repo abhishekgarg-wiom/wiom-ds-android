@@ -41,7 +41,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.1.0")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.1.1")
 }
 ```
 
