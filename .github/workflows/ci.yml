@@ -29,3 +29,11 @@ jobs:
 
       - name: Publish designsystem to local Maven (smoke test)
         run: ./gradlew :designsystem:publishToMavenLocal -x test
+
+      - name: Upload sample APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiom-ds-sample-debug.apk
+          path: sample/build/outputs/apk/debug/sample-debug.apk
+          if-no-files-found: error
+          retention-days: 30
