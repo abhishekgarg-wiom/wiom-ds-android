@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build designsystem
+        run: ./gradlew :designsystem:assembleRelease
+
+      - name: Build sample
+        run: ./gradlew :sample:assembleDebug
+
+      - name: Publish designsystem to local Maven (smoke test)
+        run: ./gradlew :designsystem:publishToMavenLocal -x test
