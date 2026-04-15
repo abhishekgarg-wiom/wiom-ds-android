@@ -1,0 +1,37 @@
+name: "✨ Component / enhancement request"
+description: A new component, a new variant, or a new API parameter on an existing component.
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of request?
+      options:
+        - New component (not in the current 13-component set)
+        - New variant / type on an existing component
+        - New API parameter on an existing component
+        - New foundation token (color, spacing, etc.)
+        - New icon in WiomIcons
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Concrete use case
+      description: |
+        Which Wiom screen / flow needs this? What's the user trying to accomplish?
+        Example: "The recharge confirmation screen needs a Stepper component for quantity."
+    validations:
+      required: true
+  - type: input
+    id: figma-link
+    attributes:
+      label: Figma link (if designed)
+      description: If design has specced it, paste the Figma frame link.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried instead?
+      description: |
+        If you've been composing this from existing Wiom components, describe that
+        so we know if a new primitive is actually needed or if we just need docs.

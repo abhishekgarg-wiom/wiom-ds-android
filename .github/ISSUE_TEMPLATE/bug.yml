@@ -1,0 +1,64 @@
+name: "🐛 Bug report"
+description: Something in a component renders wrong, crashes, or behaves unexpectedly.
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which component?
+      options:
+        - WiomButton / WiomAcknowledge
+        - WiomBadge
+        - WiomCheckbox
+        - WiomRadio
+        - WiomSwitch
+        - WiomInput / WiomTextarea
+        - WiomListItem
+        - WiomTopBar
+        - WiomNavigationBar
+        - WiomDropdown
+        - WiomPillTabs / WiomUnderlineFilter / WiomChip
+        - WiomPagination
+        - WiomBottomSheet
+        - Foundation tokens (WiomTheme.*)
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      description: "e.g. v0.2.0"
+      placeholder: "v0.2.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw vs what you expected.
+      placeholder: |
+        Steps to reproduce:
+        1. …
+        2. …
+
+        Expected: …
+        Actual: …
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / video
+      description: Drag-drop images here. Highlight the issue with a box / arrow if possible.
+  - type: input
+    id: device
+    attributes:
+      label: Device / Android version
+      description: "e.g. Realme 9 Pro, Android 13"
+  - type: textarea
+    id: code
+    attributes:
+      label: Minimal code snippet
+      description: The smallest Compose snippet that reproduces this.
+      render: kotlin

@@ -1,0 +1,58 @@
+name: "🎨 Visual mismatch with Figma"
+description: A component's code rendering looks different from the Figma design.
+labels: ["visual-mismatch", "design-review"]
+body:
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which component?
+      options:
+        - WiomButton / WiomAcknowledge
+        - WiomBadge
+        - WiomCheckbox
+        - WiomRadio
+        - WiomSwitch
+        - WiomInput / WiomTextarea
+        - WiomListItem
+        - WiomTopBar
+        - WiomNavigationBar
+        - WiomDropdown
+        - WiomPillTabs / WiomUnderlineFilter / WiomChip
+        - WiomPagination
+        - WiomBottomSheet
+    validations:
+      required: true
+  - type: input
+    id: figma-link
+    attributes:
+      label: Figma link
+      description: Direct link to the component frame in Figma (Share → Copy link).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      placeholder: "v0.2.0"
+    validations:
+      required: true
+  - type: textarea
+    id: mismatch
+    attributes:
+      label: What's different?
+      description: |
+        Describe the mismatch. Examples:
+        - "Padding looks too tight — Figma shows 16dp, code looks like 12dp."
+        - "Border radius on active tab is softer than Figma."
+        - "Selected chip text color is off."
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Side-by-side screenshots
+      description: |
+        Paste the Figma export + a screenshot of the component running on your device.
+        If you can overlay them or draw a red box on the difference, that speeds up the fix.
+    validations:
+      required: true
