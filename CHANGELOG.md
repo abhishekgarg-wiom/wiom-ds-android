@@ -4,6 +4,19 @@ All notable changes to the Wiom Design System (Android) will be documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-04-15
+
+First working JitPack release. v0.1.0 shipped with three build-blocking issues; this is the same 12-component set with those fixed.
+
+### Fixed
+- `gradlew` script lost its executable bit when committed from Windows — Linux CI couldn't run it. Restored via `git update-index --chmod=+x`.
+- AGP's `android.publishing { singleVariant("release") }` block conflicted with the `com.vanniktech.maven.publish` plugin (double registration of the `release` component). Removed the AGP block; vanniktech owns publishing.
+- `WiomSwitch` missing `import androidx.compose.runtime.getValue` needed for `by animateDpAsState(...)` delegated state. Compile error: *"Type 'State<Dp>' has no method 'getValue'"*. Import added.
+
+Added **MIGRATION.md** — step-by-step adoption guide for app developers: install, wrap in `WiomTheme`, migration playbook (screen order, per-screen checklist, PR template), mapping table (old primitive → Wiom component), common gotchas, versioning, bug-reporting workflow.
+
+Use this version. **v0.1.0 does not build**; v0.1.1 is the first usable release.
+
 ## [Unreleased]
 
 ### Planned
