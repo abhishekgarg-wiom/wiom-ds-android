@@ -1,96 +1,158 @@
 # WiomBottomSheet
 
-Modal bottom sheet for supplementary content and contextual actions. Surface anchored to screen bottom with scrim overlay.
+Material3 `ModalBottomSheet` wrapped with Wiom tokens. The bottom-anchored surface for supplementary content, option menus, payment confirmations, success/error feedback, pickers, and short forms.
 
-Wraps Material3's `ModalBottomSheet` with Wiom tokens. For v0.1 we ship **Modal** only (with scrim); Standard (persistent, no scrim) comes later.
+Use a dialog — not a bottom sheet — for blocking single-thought alerts.
 
-## When to use
+---
 
-- **List-based:** option menu, quick settings, picker (Language, Sort)
-- **Illustration:** confirmation, success, error feedback with visual context
-- Contextual actions without leaving the screen
+## Anatomy
 
-## When NOT to use
+```
+Scrim (overlay.scrim)
+└─ Sheet Surface
+   • bg.default · top corners radius.xlarge · bottom corners radius.none
+   ├─ Drag handle  (32 × 4 dp pill · stroke.strong · radius.full · space.sm vertical padding)
+   ├─ Header       (WiomBottomSheetHeader · divider · stroke.small · stroke.subtle)
+   ├─ Content      (WiomBottomSheetListItem rows, WiomBottomSheetIllustration, WiomInput, …)
+   └─ Actions      (WiomBottomSheetActions — divider-above, 1–3 WiomButton instances)
+```
 
-- Critical alert requiring immediate attention → Dialog
-- Full-page flow → new screen
-- Simple toast/notification → Snackbar
-- Tooltip → inline hint
+The sheet applies `navigationBarsPadding()` so the bottom action bar never collides with the gesture-nav pill.
+
+---
+
+## Size variants
+
+The container takes a `WiomBottomSheetSize` enum. List variants set a min-height heuristic; hug-height variants let content drive the height.
+
+| Size | Height behavior | Typical content |
+|---|---|---|
+| `Compact` | `heightIn(min = 240.dp)` | Header + 2 list rows |
+| `Half` | `heightIn(min = 400.dp)` | Header + 3–4 list rows, picker |
+| `Expanded` | `heightIn(min = 600.dp)` | Header + 5+ rows, filter sheet |
+| `Full` | fill (via `skipPartiallyExpanded`) | Long scrollable content |
+| `Illustration` | hug | Centered illustration + text |
+| `IllustrationCta` | hug | Illustration + text + action bar |
+| `IllustrationLeft` | hug | Compact feedback with image left, text right (composed inline) |
+| `Share` | hug | Header + horizontal row / list of share targets |
+| `Form` | hug | Header + 1–3 `WiomInput` fields + action bar |
+
+Choosing between Size and the content helpers is independent — the enum is a sheet-height hint, the helpers control the anatomy you put inside.
+
+---
 
 ## API
 
 ```kotlin
-var showSheet by remember { mutableStateOf(false) }
+@Composable
+fun WiomBottomSheet(
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    size: WiomBottomSheetSize = WiomBottomSheetSize.Compact,
+    showHandle: Boolean = true,
+    sheetState: SheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = size == WiomBottomSheetSize.Full,
+    ),
+    content: @Composable ColumnScope.() -> Unit,
+)
 
+enum class WiomBottomSheetSize {
+    Compact, Half, Expanded, Full,
+    Illustration, IllustrationCta, IllustrationLeft, Share, Form
+}
+```
+
+### Helpers
+
+- `WiomBottomSheetHeader(title, subtitle = null)` — title `type.headingLg` left-aligned, optional subtitle `type.bodyMd` · `text.subtle`. Padding `space.xl` L, `space.lg` R, `space.xs` T, `space.md` B. Divider below.
+- `WiomBottomSheetListItem(label, onClick, description = null, icon = null)` — built inline with `space.xl` horizontal padding. Icon lives in a 40dp `bg.brandSubtle` circle; label is `type.labelLg`; trailing `Icons.Rounded.ChevronRight` is 20dp `icon.disabled`.
+- `WiomBottomSheetIllustration(icon, heading, subtext)` — 120dp `bg.brandSubtle` circle with 48dp `icon.brand` glyph centered. Heading + subtext centered.
+- `WiomBottomSheetActions { content: @Composable RowScope.() -> Unit }` — top divider, `space.xl` H × `space.lg` V padding, `space.md` gap. Place 1–3 `WiomButton` calls inside.
+
+---
+
+## Usage
+
+### Payment confirmation (Illustration + actions)
+
+```kotlin
 if (showSheet) {
-    WiomBottomSheet(onDismissRequest = { showSheet = false }) {
-        WiomBottomSheetHeader(title = "Policy Options")
-        WiomBottomSheetListItem(
-            label = "View Policy Details",
-            description = "See coverage, plan, and expiry",
-            icon = WiomIcons.phone,
-            onClick = { /* ... */ },
-        )
-        WiomBottomSheetListItem(
-            label = "Make a Payment",
-            icon = WiomIcons.checkCircle,
-            onClick = { /* ... */ },
+    WiomBottomSheet(
+        onDismissRequest = { showSheet = false },
+        size = WiomBottomSheetSize.IllustrationCta,
+    ) {
+        WiomBottomSheetIllustration(
+            icon = Icons.Rounded.Payment,
+            heading = "Pay Rs 299?",
+            subtext = "Monthly recharge for Plan A. Amount will be debited from your UPI account.",
         )
         WiomBottomSheetActions {
-            // Pass WiomCta buttons here when available.
-            // In v0.1, use your own button primitives.
+            WiomButton(
+                text = "Cancel",
+                onClick = { showSheet = false },
+                modifier = Modifier.weight(1f),
+                type = WiomButtonType.Secondary,
+            )
+            WiomButton(
+                text = "Pay now",
+                onClick = { /* … */ },
+                modifier = Modifier.weight(1f),
+                type = WiomButtonType.Primary,
+            )
         }
     }
 }
 ```
 
-### Illustration layout (confirmation / success / error)
+### Option menu (Half + list rows, no actions)
 
 ```kotlin
-WiomBottomSheet(onDismissRequest = { showSheet = false }) {
-    WiomBottomSheetIllustration(
-        icon = WiomIcons.checkCircle,
-        heading = "Payment Successful",
-        subtext = "₹299 has been charged. Your plan is now active until 15 May.",
-    )
-    WiomBottomSheetActions {
-        // Single primary CTA ("Done") — coming with WiomCta.
-    }
+WiomBottomSheet(
+    onDismissRequest = onDismiss,
+    size = WiomBottomSheetSize.Half,
+) {
+    WiomBottomSheetHeader(title = "Policy options")
+    WiomBottomSheetListItem("View policy details", onClick = { /* … */ }, icon = Icons.Rounded.Description)
+    WiomBottomSheetListItem("Make a payment",     onClick = { /* … */ }, icon = Icons.Rounded.Payment)
+    WiomBottomSheetListItem("Contact support",    onClick = { /* … */ }, icon = Icons.Rounded.SupportAgent)
+    WiomBottomSheetListItem("Download documents", onClick = { /* … */ }, icon = Icons.Rounded.Download)
 }
 ```
 
+---
+
 ## Rules
 
-1. **Always include a drag handle.** Primary dismiss affordance — this is baked in.
-2. **No close button.** Drag handle + scrim tap are enough.
-3. **No border + shadow together.** Shadow alone provides depth (Material3 handles this).
-4. **Top corners `radius.xlarge` only.** Bottom corners are `0dp` — the sheet anchors to the screen edge.
-5. **Title is left-aligned** in list layout. Centered only in illustration layout.
-6. **Divider after header** (full width) — dividers between list items are inset inside cards.
-7. **Never nest a bottom sheet inside another.**
-8. **Max ~7 list items** before scroll becomes necessary.
+- Top corners are always `radius.xlarge`; bottom corners are always `radius.none` — the sheet anchors to the screen edge.
+- Drag handle is the dismiss affordance. Don't add a close button.
+- No top border on the action bar — `space.lg` top padding + divider above the row provides the separation. (The divider is intentional for list + actions; illustration variants can omit actions entirely if no commit is needed.)
+- `space.xl` (24dp) horizontal padding everywhere — header left, list row, illustration block, action bar. Don't fall back to 16dp.
+- Rows are built inline, not via `WiomListItem` — that component's 16dp inset would break the sheet's 24dp alignment.
+- Max 3 actions in `WiomBottomSheetActions`. For three side-by-side actions, none may be a Primary CTA — follow the `wiom-cta` button-group rule.
+- Don't nest a bottom sheet inside another bottom sheet.
+- Don't use a bottom sheet for a blocking single-thought alert — use `WiomDialog` instead.
 
-## Composition
+---
 
-- `WiomBottomSheet { }` — the container. Handles dismiss, scrim, shape.
-- `WiomBottomSheetHeader(title, subtitle)` — left-aligned title + divider.
-- `WiomBottomSheetListItem(label, description, icon, onClick)` — brand-tint circle icon + label + description + chevron. Uses `WiomListItem` under the hood.
-- `WiomBottomSheetIllustration(icon, heading, subtext)` — 120dp brand-tint circle with 48dp icon, centered heading + subtext.
-- `WiomBottomSheetActions { }` — row of buttons at the bottom, divider above.
+## Tokens used
 
-## Tokens
-
-- Container: `surface.base` · `radius.xlarge` top, `radius.none` bottom
-- Scrim: `overlay.default` (rgba 22,16,33,0.50)
-- Drag handle: 32×4dp · `border.strong` · `radius.full`
-- Header title: `type.headingMd` · `text.primary`
-- Header subtitle: `type.bodySm` · `text.secondary`
-- Header padding: `space.xl` left, `space.lg` right, `space.xs` top, `space.md` bottom
-- Divider: `stroke.small` · `border.subtle`
-- List item icon circle: 40dp · `brand.primaryTint`
-- List item icon: 20dp · `brand.primary`
-- Illustration circle: 120dp · `brand.primaryTint` · radius full
-- Illustration icon: 48dp (`icon.lg`) · `brand.primary`
-- Illustration heading: `type.headingMd` · centered
-- Illustration subtext: `type.bodyMd` · `text.secondary` · centered
-- Action bar padding: `space.xl` H, `space.lg` V · gap: `space.md`
+| Slot | Token |
+|---|---|
+| Sheet fill | `bg.default` |
+| Scrim | `overlay.scrim` |
+| Top corner radius | `radius.xlarge` |
+| Handle fill | `stroke.strong` |
+| Handle radius | `radius.full` |
+| Header title | `type.headingLg` · `text.default` |
+| Header subtitle | `type.bodyMd` · `text.subtle` |
+| Divider | `stroke.small` · `stroke.subtle` |
+| List item label | `type.labelLg` · `text.default` |
+| List item description | `type.bodyMd` · `text.subtle` |
+| List item icon circle | `bg.brandSubtle` · 40dp · `radius.full` |
+| List item icon | `icon.brand` · 20dp |
+| Chevron | `icon.disabled` · 20dp |
+| Illustration circle | `bg.brandSubtle` · 120dp · `radius.full` |
+| Illustration icon | `icon.brand` · 48dp |
+| Illustration heading | `type.headingLg` · `text.default` |
+| Illustration subtext | `type.bodyLg` · `text.subtle` |

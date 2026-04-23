@@ -24,12 +24,9 @@ import com.wiom.designsystem.foundation.typography.WiomTypography
 import com.wiom.designsystem.foundation.typography.wiomTypography
 
 /**
- * Root theme for Wiom apps. Wrap your app once in `WiomTheme { ... }` and use
- * [WiomTheme.colors], [WiomTheme.type], [WiomTheme.spacing], [WiomTheme.radius],
- * [WiomTheme.stroke], [WiomTheme.shadow], [WiomTheme.icon] anywhere underneath.
- *
- * Also bridges Material3's [MaterialTheme] so Material components (Button, TextField, etc.)
- * pick up approximate Wiom colors and typography.
+ * Root theme. Wrap the app once in `WiomTheme { }` and access tokens via
+ * [WiomTheme.color] / [WiomTheme.type] / [WiomTheme.spacing] / [WiomTheme.radius] /
+ * [WiomTheme.stroke] / [WiomTheme.shadow] / [WiomTheme.iconSize].
  */
 @Composable
 fun WiomTheme(
@@ -39,25 +36,24 @@ fun WiomTheme(
     radius: WiomRadius = WiomRadius(),
     stroke: WiomStroke = WiomStroke(),
     shadow: WiomShadow = WiomShadow(),
-    icon: WiomIconSize = WiomIconSize(),
+    iconSize: WiomIconSize = WiomIconSize(),
     content: @Composable () -> Unit,
 ) {
     val materialColorScheme = lightColorScheme(
-        primary = colors.brand.primary,
-        onPrimary = colors.text.onColor,
-        secondary = colors.brand.secondary,
+        primary = colors.bg.brand,
+        onPrimary = colors.text.onBrand,
+        secondary = colors.bg.brandBold,
         onSecondary = colors.text.inverse,
-        error = colors.negative.primary,
-        onError = colors.text.onColor,
-        background = colors.surface.base,
-        onBackground = colors.text.primary,
-        surface = colors.surface.base,
-        onSurface = colors.text.primary,
-        surfaceVariant = colors.surface.subtle,
-        onSurfaceVariant = colors.text.secondary,
-        outline = colors.border.default,
+        error = colors.bg.critical,
+        onError = colors.text.onCritical,
+        background = colors.bg.default,
+        onBackground = colors.text.default,
+        surface = colors.bg.default,
+        onSurface = colors.text.default,
+        surfaceVariant = colors.bg.subtle,
+        onSurfaceVariant = colors.text.subtle,
+        outline = colors.stroke.subtle,
     )
-
     val materialTypography = Typography(
         displayLarge = typography.displayLg,
         headlineLarge = typography.headingXl,
@@ -73,7 +69,6 @@ fun WiomTheme(
         labelMedium = typography.labelMd,
         labelSmall = typography.labelSm,
     )
-
     CompositionLocalProvider(
         LocalWiomColors provides colors,
         LocalWiomTypography provides typography,
@@ -81,7 +76,7 @@ fun WiomTheme(
         LocalWiomRadius provides radius,
         LocalWiomStroke provides stroke,
         LocalWiomShadow provides shadow,
-        LocalWiomIconSize provides icon,
+        LocalWiomIconSize provides iconSize,
     ) {
         MaterialTheme(
             colorScheme = materialColorScheme,
@@ -91,33 +86,12 @@ fun WiomTheme(
     }
 }
 
-/** Access Wiom tokens anywhere under [WiomTheme]. */
 object WiomTheme {
-    val colors: WiomColors
-        @Composable @ReadOnlyComposable
-        get() = LocalWiomColors.current
-
-    val type: WiomTypography
-        @Composable @ReadOnlyComposable
-        get() = LocalWiomTypography.current
-
-    val spacing: WiomSpacing
-        @Composable @ReadOnlyComposable
-        get() = LocalWiomSpacing.current
-
-    val radius: WiomRadius
-        @Composable @ReadOnlyComposable
-        get() = LocalWiomRadius.current
-
-    val stroke: WiomStroke
-        @Composable @ReadOnlyComposable
-        get() = LocalWiomStroke.current
-
-    val shadow: WiomShadow
-        @Composable @ReadOnlyComposable
-        get() = LocalWiomShadow.current
-
-    val icon: WiomIconSize
-        @Composable @ReadOnlyComposable
-        get() = LocalWiomIconSize.current
+    val color: WiomColors @Composable @ReadOnlyComposable get() = LocalWiomColors.current
+    val type: WiomTypography @Composable @ReadOnlyComposable get() = LocalWiomTypography.current
+    val spacing: WiomSpacing @Composable @ReadOnlyComposable get() = LocalWiomSpacing.current
+    val radius: WiomRadius @Composable @ReadOnlyComposable get() = LocalWiomRadius.current
+    val stroke: WiomStroke @Composable @ReadOnlyComposable get() = LocalWiomStroke.current
+    val shadow: WiomShadow @Composable @ReadOnlyComposable get() = LocalWiomShadow.current
+    val iconSize: WiomIconSize @Composable @ReadOnlyComposable get() = LocalWiomIconSize.current
 }

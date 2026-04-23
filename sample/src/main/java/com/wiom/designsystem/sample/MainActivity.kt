@@ -5,69 +5,41 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
-import com.wiom.designsystem.component.badge.WiomBadgeColor
-import com.wiom.designsystem.component.badge.WiomBadgeCount
-import com.wiom.designsystem.component.badge.WiomBadgeDot
-import com.wiom.designsystem.component.badge.WiomBadgeLabel
-import com.wiom.designsystem.component.badge.WiomBadgeSize
-import com.wiom.designsystem.component.badge.WiomBadgeStyle
-import com.wiom.designsystem.component.bottomsheet.WiomBottomSheet
-import com.wiom.designsystem.component.bottomsheet.WiomBottomSheetHeader
-import com.wiom.designsystem.component.bottomsheet.WiomBottomSheetListItem
-import com.wiom.designsystem.component.button.WiomAcknowledge
-import com.wiom.designsystem.component.button.WiomButton
-import com.wiom.designsystem.component.button.WiomButtonIcon
-import com.wiom.designsystem.component.button.WiomButtonType
-import com.wiom.designsystem.component.checkbox.WiomCheckbox
-import com.wiom.designsystem.component.dropdown.WiomDropdown
-import com.wiom.designsystem.component.dropdown.WiomDropdownOption
-import com.wiom.designsystem.component.input.WiomInput
-import com.wiom.designsystem.component.listitem.WiomListItem
-import com.wiom.designsystem.component.navigationbar.WiomNavItem
-import com.wiom.designsystem.component.navigationbar.WiomNavigationBar
-import com.wiom.designsystem.component.pagination.WiomPaginationBars
-import com.wiom.designsystem.component.pagination.WiomPaginationCounter
-import com.wiom.designsystem.component.pagination.WiomPaginationDotStyle
-import com.wiom.designsystem.component.pagination.WiomPaginationDots
-import com.wiom.designsystem.component.radio.WiomRadio
-import com.wiom.designsystem.component.stepper.WiomHorizontalStep
-import com.wiom.designsystem.component.stepper.WiomStepperHorizontal
-import com.wiom.designsystem.component.stepper.WiomStepperVertical
-import com.wiom.designsystem.component.stepper.WiomVerticalStep
-import com.wiom.designsystem.component.switch.WiomSwitch
-import com.wiom.designsystem.component.tabsfilters.WiomChip
-import com.wiom.designsystem.component.tabsfilters.WiomChipRow
-import com.wiom.designsystem.component.tabsfilters.WiomPillTabs
-import com.wiom.designsystem.component.tabsfilters.WiomUnderlineFilter
-import com.wiom.designsystem.component.topbar.WiomTopBar
-import com.wiom.designsystem.component.topbar.WiomTopBarIconAction
+import androidx.compose.ui.graphics.Color
 import com.wiom.designsystem.foundation.icon.WiomIcon
-import com.wiom.designsystem.foundation.icon.WiomIcons
 import com.wiom.designsystem.theme.WiomTheme
 
+/**
+ * v1.0.0 sample app — **foundations health-check**.
+ *
+ * This screen shows the theme is wiring tokens + typography + icons correctly.
+ * Per-component visual review lives in each component's `@Preview` blocks
+ * (open any `Wiom*.kt` file and use Android Studio's design view).
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             WiomTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = WiomTheme.colors.surface.base) {
-                    SampleScreen()
+                Surface(modifier = Modifier.fillMaxSize(), color = WiomTheme.color.bg.default) {
+                    Showcase()
                 }
             }
         }
@@ -75,244 +47,87 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun SampleScreen() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        WiomTopBar(
-            title = "Wiom DS Showcase",
-            leading = null,
-            actions = {
-                WiomTopBarIconAction(
-                    icon = { WiomIcon(WiomIcons.search, "Search", tint = WiomTheme.colors.text.secondary) },
-                    onClick = {},
-                )
-            },
+private fun Showcase() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(WiomTheme.spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xl),
+    ) {
+        Header()
+        ColorsSwatch()
+        TypographySpecimen()
+        IconsShowcase()
+    }
+}
+
+@Composable
+private fun Header() {
+    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs)) {
+        Text("Wiom DS — v1.0.0", style = WiomTheme.type.headingLg, color = WiomTheme.color.text.default)
+        Text(
+            "Element-first tokens · Material 3 Icons Rounded · Noto Sans · 16 components.",
+            style = WiomTheme.type.bodyMd,
+            color = WiomTheme.color.text.subtle,
         )
-        Column(
+    }
+}
+
+@Composable
+private fun ColorsSwatch() {
+    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
+        Text("Colors", style = WiomTheme.type.titleSm, color = WiomTheme.color.text.default)
+        Row(horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
+            Swatch(WiomTheme.color.bg.brand, "brand")
+            Swatch(WiomTheme.color.bg.critical, "critical")
+            Swatch(WiomTheme.color.bg.positive, "positive")
+            Swatch(WiomTheme.color.bg.warning, "warning")
+            Swatch(WiomTheme.color.bg.info, "info")
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
+            Swatch(WiomTheme.color.bg.brandSubtle, "brandSubtle")
+            Swatch(WiomTheme.color.bg.criticalSubtle, "criticalSubtle")
+            Swatch(WiomTheme.color.bg.positiveSubtle, "positiveSubtle")
+            Swatch(WiomTheme.color.bg.warningSubtle, "warningSubtle")
+            Swatch(WiomTheme.color.bg.infoSubtle, "infoSubtle")
+        }
+    }
+}
+
+@Composable
+private fun Swatch(color: Color, label: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs)) {
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(WiomTheme.spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xl),
-        ) {
-            ButtonsSection()
-            BadgesSection()
-            CheckboxSection()
-            RadioSection()
-            SwitchSection()
-            InputSection()
-            ListItemSection()
-            DropdownSection()
-            TabsFiltersSection()
-            PaginationSection()
-            StepperSection()
-            BottomSheetSection()
-        }
-        NavBarFooter()
-    }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(text = text, style = WiomTheme.type.headingMd, color = WiomTheme.colors.text.primary)
-}
-
-@Composable
-private fun ButtonsSection() {
-    var ack by remember { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md)) {
-        SectionTitle("Buttons")
-        WiomButton(text = "भुगतान करें", onClick = {}, type = WiomButtonType.Primary)
-        WiomButton(text = "वापस जाएं", onClick = {}, type = WiomButtonType.Secondary)
-        WiomButton(text = "Maybe later", onClick = {}, type = WiomButtonType.Tertiary)
-        WiomButton(text = "Delete plan", onClick = {}, type = WiomButtonType.Destructive, icon = WiomButtonIcon.Leading(WiomIcons.cancel))
-        WiomButton(text = "Processing…", onClick = {}, type = WiomButtonType.Primary, loading = true)
-        WiomAcknowledge(text = "मैंने सभी जानकारी सही दी है", checked = ack, onCheckedChange = { ack = it })
-        WiomButton(text = "Submit", onClick = {}, type = WiomButtonType.Primary, enabled = ack)
-    }
-}
-
-@Composable
-private fun BadgesSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
-        SectionTitle("Badges")
-        Row(horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
-            WiomBadgeDot(color = WiomBadgeColor.Brand)
-            WiomBadgeDot(color = WiomBadgeColor.Negative)
-            WiomBadgeCount(count = 5)
-            WiomBadgeCount(count = 25, color = WiomBadgeColor.Brand)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
-            WiomBadgeLabel("Confirmed", color = WiomBadgeColor.Positive, style = WiomBadgeStyle.Filled)
-            WiomBadgeLabel("Pending", color = WiomBadgeColor.Warning)
-            WiomBadgeLabel("असफल", color = WiomBadgeColor.Negative, style = WiomBadgeStyle.Filled)
-            WiomBadgeLabel("पक्का", size = WiomBadgeSize.Small, color = WiomBadgeColor.Positive)
-        }
-    }
-}
-
-@Composable
-private fun CheckboxSection() {
-    var c1 by remember { mutableStateOf(false) }
-    var c2 by remember { mutableStateOf(true) }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md)) {
-        SectionTitle("Checkbox")
-        WiomCheckbox(checked = c1, onCheckedChange = { c1 = it }, label = "I agree to the Terms & Conditions", helper = "You can review the full terms before agreeing")
-        WiomCheckbox(checked = c2, onCheckedChange = { c2 = it }, label = "Send me offers and updates via SMS")
-    }
-}
-
-@Composable
-private fun RadioSection() {
-    var payment by remember { mutableStateOf("upi") }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md)) {
-        SectionTitle("Radio")
-        WiomRadio(selected = payment == "upi", onClick = { payment = "upi" }, label = "Pay via UPI", helper = "Instant transfer from your bank")
-        WiomRadio(selected = payment == "card", onClick = { payment = "card" }, label = "Debit / Credit Card")
-        WiomRadio(selected = payment == "cod", onClick = { payment = "cod" }, label = "Cash on delivery")
-    }
-}
-
-@Composable
-private fun SwitchSection() {
-    var s1 by remember { mutableStateOf(true) }
-    var s2 by remember { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md)) {
-        SectionTitle("Switch")
-        WiomSwitch(checked = s1, onCheckedChange = { s1 = it }, label = "Auto-renew plan", helper = "Your plan will renew on the 15th of each month")
-        WiomSwitch(checked = s2, onCheckedChange = { s2 = it }, label = "Share usage data")
-    }
-}
-
-@Composable
-private fun InputSection() {
-    var phone by remember { mutableStateOf("9876543210") }
-    var amount by remember { mutableStateOf("500") }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg)) {
-        SectionTitle("Input")
-        WiomInput(
-            value = phone,
-            onValueChange = { phone = it },
-            title = "Mobile number",
-            leadingIcon = { WiomIcon(WiomIcons.phone, null, size = WiomTheme.icon.sm, tint = WiomTheme.colors.text.secondary) },
-            helper = "We'll send an OTP",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                .size(WiomTheme.spacing.huge)
+                .background(color, RoundedCornerShape(WiomTheme.radius.small))
         )
-        WiomInput(
-            value = amount,
-            onValueChange = { amount = it },
-            title = "Recharge amount",
-            prefix = "₹",
-            suffix = ".00",
-            helper = "Includes 18% GST",
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        )
+        Text(label, style = WiomTheme.type.bodySm, color = WiomTheme.color.text.subtle)
     }
 }
 
 @Composable
-private fun ListItemSection() {
+private fun TypographySpecimen() {
+    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs)) {
+        Text("Typography (Noto Sans via Google Fonts)", style = WiomTheme.type.titleSm, color = WiomTheme.color.text.default)
+        Text("headingLg 24 Bold", style = WiomTheme.type.headingLg, color = WiomTheme.color.text.default)
+        Text("titleLg 20 Medium", style = WiomTheme.type.titleLg, color = WiomTheme.color.text.default)
+        Text("bodyLg 16 Regular (default)", style = WiomTheme.type.bodyLg, color = WiomTheme.color.text.default)
+        Text("bodyMd 14 Regular", style = WiomTheme.type.bodyMd, color = WiomTheme.color.text.subtle)
+        Text("labelLg 16 SemiBold (interactive)", style = WiomTheme.type.labelLg, color = WiomTheme.color.text.default)
+        Text("labelMd 14 SemiBold", style = WiomTheme.type.labelMd, color = WiomTheme.color.text.default)
+    }
+}
+
+@Composable
+private fun IconsShowcase() {
     Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
-        SectionTitle("List items")
-        WiomListItem(primary = "Account", leadingIcon = { WiomIcon(WiomIcons.phone, null, size = WiomTheme.icon.md, tint = WiomTheme.colors.text.secondary) }, onClick = {})
-        WiomListItem(primary = "Language", trailingMeta = "English", onClick = {})
-        WiomListItem(primary = "Build", secondary = "v0.1.0 — Up to date", trailingIcon = null)
-    }
-}
-
-@Composable
-private fun DropdownSection() {
-    val langs = listOf(
-        WiomDropdownOption("en", "English"),
-        WiomDropdownOption("hi", "हिन्दी"),
-        WiomDropdownOption("te", "తెలుగు"),
-    )
-    var lang by remember { mutableStateOf<String?>("hi") }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
-        SectionTitle("Dropdown")
-        WiomDropdown(value = lang, options = langs, onValueChange = { lang = it }, label = "Language")
-    }
-}
-
-@Composable
-private fun TabsFiltersSection() {
-    var pillIdx by remember { mutableStateOf(0) }
-    var filterIdx by remember { mutableStateOf(1) }
-    var installSel by remember { mutableStateOf(true) }
-    var repairSel by remember { mutableStateOf(true) }
-    var rechargeSel by remember { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md)) {
-        SectionTitle("Tabs · Filters · Chips")
-        WiomPillTabs(tabs = listOf("मेरे टिकट", "टीम के टिकट"), selectedIndex = pillIdx, onTabSelect = { pillIdx = it })
-        WiomUnderlineFilter(filters = listOf("सभी", "पेंडिंग", "बंद"), selectedIndex = filterIdx, onFilterSelect = { filterIdx = it })
-        WiomChipRow {
-            WiomChip(label = "इंस्टॉलेशन", selected = installSel, onClick = { installSel = !installSel })
-            WiomChip(label = "रिपेयर", selected = repairSel, onClick = { repairSel = !repairSel })
-            WiomChip(label = "रिचार्ज", selected = rechargeSel, onClick = { rechargeSel = !rechargeSel })
+        Text("Icons — Icons.Rounded.* via WiomIcon", style = WiomTheme.type.titleSm, color = WiomTheme.color.text.default)
+        Row(horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg)) {
+            WiomIcon(Icons.Rounded.Search, contentDescription = "Search", tint = WiomTheme.color.icon.action)
+            WiomIcon(Icons.Rounded.Phone, contentDescription = "Phone", tint = WiomTheme.color.icon.brand)
+            WiomIcon(Icons.Rounded.Settings, contentDescription = "Settings", tint = WiomTheme.color.icon.nonAction)
         }
     }
-}
-
-@Composable
-private fun PaginationSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg)) {
-        SectionTitle("Pagination")
-        WiomPaginationDots(total = 4, current = 2, style = WiomPaginationDotStyle.Expanded)
-        WiomPaginationBars(total = 5, current = 3, counterLabel = "Step 3 of 5")
-        WiomPaginationCounter(current = 3, total = 10, onPrev = {}, onNext = {})
-    }
-}
-
-@Composable
-private fun StepperSection() {
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg)) {
-        SectionTitle("Stepper")
-        WiomStepperHorizontal(
-            steps = listOf(
-                WiomHorizontalStep("Plan"),
-                WiomHorizontalStep("Method"),
-                WiomHorizontalStep("Confirm"),
-                WiomHorizontalStep("Pay"),
-                WiomHorizontalStep("Done"),
-            ),
-            currentStep = 3,
-        )
-        WiomStepperVertical(
-            steps = listOf(
-                WiomVerticalStep("Personal info", "Name, DOB, email verified"),
-                WiomVerticalStep("Address", "Installation address confirmed"),
-                WiomVerticalStep("Aadhaar", "Enter the OTP sent to your mobile"),
-                WiomVerticalStep("Selfie", "Clear photo in good lighting"),
-            ),
-            currentStep = 3,
-        )
-    }
-}
-
-@Composable
-private fun BottomSheetSection() {
-    var show by remember { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
-        SectionTitle("Bottom sheet")
-        WiomListItem(primary = "Show options sheet", onClick = { show = true })
-        if (show) {
-            WiomBottomSheet(onDismissRequest = { show = false }) {
-                WiomBottomSheetHeader(title = "Policy Options")
-                WiomBottomSheetListItem(label = "View Policy Details", description = "See coverage, plan, and expiry", icon = WiomIcons.phone, onClick = {})
-                WiomBottomSheetListItem(label = "Make a Payment", icon = WiomIcons.checkCircle, onClick = {})
-                WiomBottomSheetListItem(label = "Contact Support", icon = WiomIcons.search, onClick = {})
-            }
-        }
-    }
-}
-
-@Composable
-private fun NavBarFooter() {
-    val items = listOf(
-        WiomNavItem("Home", WiomIcons.search),
-        WiomNavItem("Plans", WiomIcons.expandMore),
-        WiomNavItem("Bills", WiomIcons.phone, hasBadge = true),
-        WiomNavItem("Profile", WiomIcons.menu),
-    )
-    var nav by remember { mutableStateOf(0) }
-    WiomNavigationBar(items = items, selectedIndex = nav, onSelect = { nav = it })
 }

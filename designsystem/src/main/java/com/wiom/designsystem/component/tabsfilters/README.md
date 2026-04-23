@@ -1,92 +1,118 @@
-# WiomPillTabs · WiomUnderlineFilter · WiomChip
+# WiomTabsFilters
 
-Three components, three semantics. Pick by **what kind of filtering** the user is doing.
+Three components for the Wiom tabs / filters / chips hierarchy. One file, three distinct semantics.
+
+| Component | Semantic | Select |
+|---|---|---|
+| `WiomPillTabs` | Context switch — whose data / which mode | Single |
+| `WiomUnderlineFilter` | Single-select filter inside the same dataset | Single |
+| `WiomChip` + `WiomChipRow` | Multi-select attribute toggle | Multi |
 
 ## Decision tree
 
 ```
-Does this change the WHOLE dataset (different source, different shape)?
-    → WiomPillTabs          (max 4, context switch)
+1. Does selecting change the ENTIRE dataset (different source/structure)?
+   YES → WiomPillTabs
+   NO  → continue
 
-Is this single-select narrowing within the SAME dataset (status/state/category)?
-    → WiomUnderlineFilter   (3–6 options, max ~8)
+2. Only ONE option active at a time (status / state / single category)?
+   YES → WiomUnderlineFilter
+   NO  → continue
 
-Can MULTIPLE filters be active at once (additive)?
-    → WiomChip              (wrap in WiomChipRow)
+3. MULTIPLE options active at once (combining attributes)?
+   YES → WiomChip + WiomChipRow
+   NO  → rethink
 ```
 
-## WiomPillTabs
+Never use Pill for status filtering. Never use Underline for multi-select. Never use Chips for mutually exclusive choices.
+
+## API
+
+### PillTabs — context switch
 
 ```kotlin
 WiomPillTabs(
     tabs = listOf("मेरे टिकट", "टीम के टिकट"),
     selectedIndex = 0,
-    onTabSelect = { selected = it },
+    onTabSelect = { idx -> ... },
 )
 ```
 
-- 2–4 options. Active pill: white fill + `shadow.sm`. Inactive: `text.secondary`.
-- Use for "mine vs team", "today / week / month", "customer / partner".
+- 2–4 tabs max. Beyond 4 = rethink IA.
+- Track: `bg.muted` · `radius.medium` · `space.xs` inner padding.
+- Active pill: `bg.default` + `shadow.sm` · `radius.small`.
+- Active label: `type.labelMd` · `text.brand`. Inactive: `type.bodyMd` · `text.subtle`.
 
-## WiomUnderlineFilter
+### UnderlineFilter — single-select
 
 ```kotlin
 WiomUnderlineFilter(
     filters = listOf("सभी", "पेंडिंग", "बंद", "एक्सपायर्ड"),
-    selectedIndex = 1,
-    onFilterSelect = { selected = it },
-    scrollable = false,    // true for 5–6 items
+    selectedIndex = 0,
+    onFilterSelect = { idx -> ... },
+    scrollable = false, // true for 5+ filters
 )
 ```
 
-- Active: 2dp brand underline + brand label. Inactive: `text.secondary`.
-- Use for status/state filtering where only one can be active.
-- For 7+ filters, use a trailing More button (build separately — opens `WiomBottomSheet` with radios).
+- 3–4 filters → `scrollable = false`, filters fill equally.
+- 5+ filters → `scrollable = true`, filters hug text and scroll horizontally.
+- Active underline: 2dp (`stroke.medium`) · `bg.brand` (via `stroke.brandFocus`). Round caps.
+- Bottom border: `stroke.small` + `stroke.subtle`.
+- Min item height: 48dp via `defaultMinSize` (touch target) — grows with font scale.
+- Active label: `type.labelMd` · `text.brand`. Inactive: `type.bodyMd` · `text.subtle`.
 
-## WiomChip + WiomChipRow
+### Chip — multi-select
 
 ```kotlin
 WiomChipRow {
-    WiomChip(label = "इंस्टॉलेशन", selected = type == "install", onClick = { toggle("install") })
-    WiomChip(label = "रिपेयर",    selected = type == "repair",  onClick = { toggle("repair") })
+    WiomChip(label = "Installation", selected = true,  onClick = { ... })
+    WiomChip(label = "Repair",       selected = true,  onClick = { ... })
+    WiomChip(label = "Upgrade",      selected = false, onClick = { ... })
 }
 ```
 
-- Selected = `surface.selected` fill + `brand.primary` text, no border.
-- Unselected = `border.subtle` outline + `text.primary`, no fill.
-- Multi-select is the whole point.
+- Selected: `bg.selected` + `text.selected` + `type.labelMd` — **no border** (filled-state rule).
+- Unselected: 1dp `stroke.subtle` border + `text.default` + `type.bodyMd`.
+- Padding: `space.md` H × `space.sm` V. Radius: `radius.small`.
+- Row gap: `space.sm` (8dp).
 
-## Valid combinations
+## Wiom use cases
 
-| Combination | When |
-|---|---|
-| Pill + Underline | Two-level split — mode + status. Pill above, Underline below. |
-| Pill + Chips | Rare. Mode switch + attribute filter. |
-| Underline + Chips | Rare. Status + type filter. |
-
-**Never** stack all three on one screen. **Never** put Pill below Underline.
+- **Partner app tickets screen:** `WiomPillTabs` (My vs Team) above `WiomUnderlineFilter` (All / Pending / Closed). Pill always above Underline.
+- **Customer app plans filter:** `WiomChipRow` of connection types (WiFi / Fiber / 5G) — multi-select.
+- **Payment history:** `WiomUnderlineFilter` (scrollable) for status categories.
 
 ## Rules
 
-1. **Max 2 filter levels per screen.** Third level = section headers in content.
-2. **Pill above Underline — always.** Broader before narrower.
-3. **Selected chip has no border.** Fill IS the boundary (foundation rule).
-4. **Pill max 4 options.** Beyond that, rethink IA.
-5. **Underline max ~8.** Beyond that, restructure.
-6. **All flat** — `shadow.none` except pill active (`shadow.sm`).
+1. Max 2 filter levels per screen. 3-level → use section headers for the 3rd.
+2. Pill is always above Underline — never reverse.
+3. Never put two Pills or two Underlines on the same screen.
+4. Don't add a Pill "just to have one" — skip it when there's only one dataset.
+5. All components are flat — no shadow — except the active Pill (`shadow.sm`).
+6. Chips never wear a border when selected. The fill is the boundary.
+7. Heights are intrinsic — no fixed `height(...)` on text-bearing rows.
 
 ## Tokens
 
 | Part | Token |
 |---|---|
-| Pill track | `surface.muted` · `radius.medium` (12dp) · `space.xs` padding |
-| Active pill | `surface.base` · `radius.small` (8dp) · `shadow.sm` |
-| Pill text (active) | `type.labelMd` · `brand.primary` |
-| Pill text (inactive) | `type.bodyMd` · `text.secondary` |
-| Underline indicator | `stroke.medium` (2dp) · `radius.full` · `brand.primary` |
-| Underline bottom border | `stroke.small` · `border.default` |
-| Chip radius | `radius.small` (8dp) |
-| Chip selected bg | `surface.selected` |
-| Chip unselected border | `stroke.small` · `border.subtle` |
+| Pill track fill | `color.bg.muted` |
+| Pill track radius | `radius.medium` |
+| Pill active fill | `color.bg.default` |
+| Pill active shadow | `shadow.sm` |
+| Pill radius | `radius.small` |
+| Pill padding | `space.md` H · `space.sm` V |
+| Pill active label | `type.labelMd` · `color.text.brand` |
+| Pill inactive label | `type.bodyMd` · `color.text.subtle` |
+| Underline active indicator | `stroke.medium` · `color.stroke.brandFocus` (= `bg.brand`) |
+| Underline bottom border | `stroke.small` · `color.stroke.subtle` |
+| Underline active label | `type.labelMd` · `color.text.brand` |
+| Underline inactive label | `type.bodyMd` · `color.text.subtle` |
+| Underline item min-height | 48dp (`space.huge`) |
+| Chip selected fill | `color.bg.selected` |
+| Chip selected text | `color.text.selected` · `type.labelMd` |
+| Chip unselected border | `stroke.small` · `color.stroke.subtle` |
+| Chip unselected text | `color.text.default` · `type.bodyMd` |
 | Chip padding | `space.md` H · `space.sm` V |
+| Chip radius | `radius.small` |
 | Chip row gap | `space.sm` |

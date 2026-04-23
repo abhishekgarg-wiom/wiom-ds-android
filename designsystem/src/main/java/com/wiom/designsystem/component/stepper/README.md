@@ -1,112 +1,122 @@
 # WiomStepper
 
-Shows progress through a **known, finite sequence** of 2–6 steps. Two layouts, shared indicator atom.
+Progress through a **known, finite sequence** of 2–6 steps. Two layouts; one shared indicator atom.
 
-## Layouts
+| Composable | Use for | Avoid for |
+|---|---|---|
+| `WiomStepperHorizontal` | 2–5 step wizards with 1–2 word labels (recharge, payment, KYC top). | Steps that need explanation. >6 steps. |
+| `WiomStepperVertical` | Status flows (KYC, installation, refund, order tracking). Steps that carry a title + description + maybe an action. | Compact UIs without vertical room. |
+| `WiomStepIndicator` (atom) | Documentation / custom layouts only. | Real screens — use the layouts. |
 
-| Layout | Use |
-|---|---|
-| `WiomStepperHorizontal` | Compact wizards with 1–2 word labels pinned to the top of recharge / payment / KYC / onboarding flows |
-| `WiomStepperVertical` | Status flows (KYC, installation, refund, order tracking) — title + description + optional action per step |
-| `WiomStepIndicator` (atom) | 32dp circle, 4 states — for custom layouts / documentation |
-
-## When NOT to use
-
-- Unknown / open-ended step count → progress bar or `WiomPaginationBars`
-- Single step → hide entirely
-- > 6 steps → restructure
-- Unrelated tasks → list with checkboxes
-- Paging through long content → `WiomPaginationCounter`
-
-## States
-
-Derived automatically from `currentStep`. Override per-step via `stateOverrides` (e.g., mark one step `Error`).
-
-| State | Visual |
-|---|---|
-| `Completed` | Filled `brand.primary` circle + white check |
-| `Active` | White fill + 2dp `brand.primary` ring + brand-colored number |
-| `Upcoming` | White fill + 1dp `border.default` ring + secondary-text number |
-| `Error` | Filled `negative.primary` circle + white `!` |
+If steps are unknown or open-ended, use `WiomPaginationBars` or a progress bar instead.
 
 ## API
 
 ```kotlin
-// Horizontal — wizard top
+enum class WiomStepState { Completed, Active, Upcoming, Error }
+
+data class WiomHorizontalStep(val label: String)
+
+data class WiomVerticalStep(
+    val title: String,
+    val description: String? = null,
+    val action: (@Composable () -> Unit)? = null,
+)
+
+WiomStepIndicator(
+    state: WiomStepState,
+    number: Int,
+    modifier: Modifier = Modifier,
+)
+
 WiomStepperHorizontal(
-    steps = listOf(
-        WiomHorizontalStep("Plan"),
-        WiomHorizontalStep("Method"),
-        WiomHorizontalStep("Confirm"),
-        WiomHorizontalStep("Pay"),
-        WiomHorizontalStep("Done"),
-    ),
-    currentStep = 3,
+    steps: List<WiomHorizontalStep>,       // 2..6
+    currentStep: Int,                       // 1..steps.size
+    modifier: Modifier = Modifier,
+    stateOverrides: Map<Int, WiomStepState> = emptyMap(),
 )
 
-// Vertical — KYC with inline OTP on the active step
 WiomStepperVertical(
-    steps = listOf(
-        WiomVerticalStep("Personal info", "Name, DOB, email verified"),
-        WiomVerticalStep("Address", "Installation address confirmed"),
-        WiomVerticalStep(
-            title = "Aadhaar",
-            description = "Enter the OTP sent to your mobile",
-            action = {
-                WiomInput(
-                    value = otp,
-                    onValueChange = { otp = it },
-                    title = "Enter 6-digit OTP",
-                    counter = timer,
-                )
-            },
-        ),
-        WiomVerticalStep("Selfie", "Clear photo in good lighting"),
-    ),
-    currentStep = 3,
-)
-
-// Mark step 2 as error
-WiomStepperVertical(
-    steps = steps,
-    currentStep = 2,
-    stateOverrides = mapOf(2 to WiomStepState.Error),
+    steps: List<WiomVerticalStep>,         // 2..6
+    currentStep: Int,
+    modifier: Modifier = Modifier,
+    stateOverrides: Map<Int, WiomStepState> = emptyMap(),
 )
 ```
 
-## Action slot patterns (Vertical)
+## States
 
-Pass any composable. Typical choices:
+| State | Visual |
+|---|---|
+| `Completed` | `bg.brand` fill + white `Icons.Rounded.Check` (20dp) |
+| `Active` | `bg.default` fill + 2dp `stroke.brandFocus` ring + brand-colored number |
+| `Upcoming` | `bg.default` fill + 1dp `stroke.subtle` ring + `text.subtle` number |
+| `Error` | `bg.critical` fill + white `Icons.Rounded.PriorityHigh` (20dp) |
 
-- `WiomButton(type = Primary)` — "Schedule installation", "Continue", "Pay ₹500"
-- `WiomButton(type = Tertiary)` — "View details →", "Track →"
-- `WiomInput(...)` — inline pincode / UPI entry
-- OTP variant of `WiomInput` — verify step
+State derivation: `step < current` → Completed; `step == current` → Active; `step > current` → Upcoming. Use `stateOverrides` (1-based index → `WiomStepState.Error`) to mark a failed step.
 
-Don't stuff two interactive elements in an action slot. Wrap them into one composable first.
+## Wiom use cases
+
+- **Recharge / payment wizard** (Horizontal): 5 steps "Plan · Method · Confirm · Pay · Done"; pinned at top of every step screen.
+- **KYC** (Vertical): "Personal info · Address · Aadhaar · Selfie"; Aadhaar step exposes an OTP field via the action slot.
+- **Installation tracking** (Vertical): "Order placed · Approved · Dispatched · Installed · Activated"; the current step might have a tertiary "Reschedule →" action.
+- **Order error** (Vertical): override one step to `Error`, use description to explain ("Aadhaar blurred — tap to retry"), attach a Primary CTA via the action slot.
+
+## Action slot (vertical only)
+
+`WiomVerticalStep.action` is a `@Composable () -> Unit`. Pass anything: `WiomButton`, a tertiary CTA, `WiomInput`, OTP field, a custom Input+Button group. One component per slot — if a step needs two controls, wrap them in your own composable first.
 
 ## Rules
 
-1. **Exactly one Active step** — handled automatically by `currentStep`.
-2. **Max 6 steps.** Beyond that, split the flow or merge micro-steps.
-3. **Horizontal labels are 1–2 words.** Use nouns, not verbs. "Pay" the step, not "Pay now" the action.
-4. **Use Error sparingly.** Only when the user must go back to fix that specific step. Not for warnings.
-5. **Connectors are automatic.** Brand-filled after Completed steps; `border.default` otherwise.
-6. **Same Stepper across all step screens of a flow.** Don't redesign between screens — only `currentStep` changes.
-7. **Don't mix Horizontal + Vertical** within the same flow.
+1. **One Active step at a time.** Don't override two steps to Active.
+2. **Steppers are for known, finite sequences.** Not for open-ended checklists or unknown totals.
+3. **Max 6 steps.** Beyond that, split the flow.
+4. **Horizontal labels are 1–2 words** (nouns: "Plan", "Pay", not verbs like "Pay now").
+5. **Connector color matches what came before** — brand-filled when previous is Completed, `stroke.subtle` otherwise. Error does not fill the connector.
+6. **Use `Error` sparingly** — only when the user must return to fix the step.
+7. **Same stepper across all screens of a flow** — only `currentStep` changes between screens.
+8. **Token-only values.** Colors, sizes, spacing, radius, stroke come from `WiomTheme.*`.
 
 ## Tokens
 
-- Indicator: 32dp · `radius.full`
-- Active ring: `stroke.medium` (2dp) · `brand.primary`
-- Upcoming ring: `stroke.small` (1dp) · `border.default`
-- Inner glyph: 20dp (check or priority_high)
-- Number typography: `type.labelMd` (14sp SemiBold)
-- Connector: 2dp · `radius.full` · brand.primary (filled) or border.default
-- Horizontal step column gap (indicator → label): `space.sm`
-- Horizontal label typography: `type.labelSm` (12sp SemiBold)
-- Vertical rail width: 32dp
-- Vertical rail → content gap: `space.md`
-- Vertical title → description gap: `space.xs`
-- Vertical description → action gap: `space.sm`
-- Vertical step content bottom gap: `space.xl`
+### StepIndicator
+| Part | Token |
+|---|---|
+| Size | 32 × 32 dp · `CircleShape` |
+| Completed fill | `bg.brand` |
+| Completed icon | `Icons.Rounded.Check` · 20dp · `icon.inverse` |
+| Active fill | `bg.default` |
+| Active ring | 2dp · `stroke.brandFocus` |
+| Active number | `bg.brand` · `type.labelMd` |
+| Upcoming fill | `bg.default` |
+| Upcoming ring | 1dp · `stroke.subtle` |
+| Upcoming number | `text.subtle` · `type.labelMd` |
+| Error fill | `bg.critical` |
+| Error icon | `Icons.Rounded.PriorityHigh` · 20dp · `icon.inverse` |
+
+### Stepper / Horizontal
+| Part | Token |
+|---|---|
+| Container width | `fillMaxWidth()` (no pinned 360dp) |
+| Indicator → label gap | `space.sm` (8dp) |
+| Label typography | `type.labelSm` |
+| Label color (Active / Completed / Error) | `text.default` |
+| Label color (Upcoming) | `text.subtle` |
+| Connector | 2dp · `radius.full` · `bg.brand` when Completed, else `stroke.subtle` |
+
+### Stepper / Vertical
+| Part | Token |
+|---|---|
+| Rail width | 32 dp |
+| Rail → content gap | `space.md` (12dp) |
+| Indicator → connector gap | `space.xs` (4dp) |
+| Connector width | 2 dp · `radius.full` |
+| Title typography | `type.labelMd` |
+| Title color (Active / Completed / Error) | `text.default` |
+| Title color (Upcoming) | `text.subtle` |
+| Title → description gap | `space.xxs` |
+| Description typography | `type.bodyMd` · `text.subtle` |
+| Description → action gap | `space.md` |
+| Between-step bottom padding | `space.xl` (24dp) |
+
+No shadows. No hardcoded hex, sp, or dp literals outside the foundation tokens.

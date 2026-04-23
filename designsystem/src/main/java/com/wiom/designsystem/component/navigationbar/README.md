@@ -1,63 +1,74 @@
 # WiomNavigationBar
 
-Persistent bottom bar for switching between 2–5 top-level destinations.
+Bottom bar for switching between 2–5 top-level destinations. Exactly one item is `Selected` at any time; reflect the current route.
 
-## When to use
+## Variants
 
-- Top-level destination switching (Home, Plans, Bills, Profile)
-- Every tab independently reachable anytime
+Driven by the `items: List<WiomNavItem>` size — 2 to 5.
 
-## When NOT to use
+| Count | When |
+|---|---|
+| 2 | Exactly two peer destinations. Rare. |
+| 3 | Focused apps — cleanest option. |
+| 4 | Genuinely needed 4th destination. |
+| 5 | Hard cap. Only if every tab is weekly-used. |
 
-- Sections inside a single screen → `WiomTabsFilters`
-- Linear flows (onboarding, KYC, checkout) — hide the bar
-- Detail/edit/modal screens pushed on top of a tab — hide the bar (don't disable)
+Items beyond 5 are not supported — don't add a "More" menu. If you need 6, you have a scope problem.
 
 ## API
 
 ```kotlin
-val items = listOf(
-    WiomNavItem(label = "Home",    icon = R.drawable.ic_home),
-    WiomNavItem(label = "Plans",   icon = R.drawable.ic_bolt),
-    WiomNavItem(label = "Bills",   icon = R.drawable.ic_receipt, hasBadge = true),
-    WiomNavItem(label = "Profile", icon = R.drawable.ic_person),
+data class WiomNavItem(
+    val label: String,
+    val icon: ImageVector,        // Icons.Rounded.*
+    val hasBadge: Boolean = false,
 )
 
-var selected by remember { mutableStateOf(0) }
-
 WiomNavigationBar(
-    items = items,
-    selectedIndex = selected,
-    onSelect = { selected = it },
+    items = listOf(
+        WiomNavItem("Home",    Icons.Rounded.Home),
+        WiomNavItem("Plans",   Icons.Rounded.Payments),
+        WiomNavItem("Bills",   Icons.Rounded.ReceiptLong, hasBadge = true),
+        WiomNavItem("Profile", Icons.Rounded.Person),
+    ),
+    selectedIndex = currentRouteIndex,
+    onItemSelect = { idx -> navigate(routes[idx]) },
 )
 ```
 
-Tab count is driven by the list length — pass 2–5 items. The bar redistributes space evenly.
+## Wiom use cases
 
-## Wiom configurations
-
-- **3-tab** — Home / Plans / Profile (most focused)
-- **4-tab** — Home / Plans / Bills / Profile (most common)
-- **5-tab** — Home / Plans / Profile / Bills / Support (max)
+- Standard Wiom Customer app: Home · Plans · Bills · Profile (4 tabs).
+- Partner app: Home · Tickets · Earnings · Profile (4 tabs).
+- Compact Partner app: Home · Tickets · Profile (3 tabs).
+- Badge `bg.critical` dot on Bills when a due invoice exists; remove on open.
 
 ## Rules
 
-1. **Exactly one selected** at any time (`selectedIndex` is the source of truth).
-2. **Labels always on.** Don't hide to "clean up" — fails first-time/low-vision users.
-3. **One word per label.** "Home", "Plans" — not "My Bills".
-4. **Icons should use filled glyphs on selected** — pass a filled icon. For now, pass the same icon for both states; future revision can accept separate outline/filled.
-5. **Badges are rare and meaningful.** Only for unread/actionable items. Not for "new feature" marketing.
-6. **Never put a CTA in the bar.** No plus/FAB merged in.
-7. **Hide on push.** When navigating into detail/flow, bar goes away.
-8. **Don't restyle per screen.** Same bar on every root destination.
+1. **One Selected at a time.** Reflects the route, not user preference.
+2. **Labels stay on.** Never hide the label — accessibility regression.
+3. **One-word labels.** "Home", "Plans", "Bills" — nouns, not verbs.
+4. **Hide on push.** Non-root screens, flows, media, keyboard-open text entry.
+5. **No CTAs in the bar.** No plus-FAB merged into a tab.
+6. **No reshuffling.** Same order on every root destination. Role-gated destinations stay in their slot.
+7. **Badges are rare.** Unread or actionable only — never decorative.
+8. **No borders on the pill**, no shadow — flat. Only the 1dp top border separates the bar from content.
 
 ## Tokens
 
-- Bar bg: `surface.base`
-- Top border: `stroke.small` · `border.default`
-- Item pill (selected): `brand.primaryTint` · `radius.full`
-- Item pill padding: `space.lg` H × `space.xs` V
-- Icon size: `icon.md` (24dp)
-- Icon color (default): `text.secondary` → (selected): `brand.primary`
-- Label: `type.labelSm` · same color as icon
-- Badge: 8dp · `negative.primary` · `radius.full` (via `WiomBadgeDot`)
+| Part | Token |
+|---|---|
+| Bar fill | `color.bg.default` |
+| Top border | `stroke.small` + `color.stroke.subtle` |
+| Bar padding | `space.xs` horizontal · `space.sm` vertical |
+| Item column gap (pill ↔ label) | `space.xs` |
+| Pill padding | `space.lg` H · `space.xs` V |
+| Pill radius | `radius.full` |
+| Selected pill fill | `color.bg.selected` |
+| Selected icon | `color.icon.brand` |
+| Inactive icon | `color.icon.nonAction` |
+| Selected label | `type.labelSm` · `color.text.selected` |
+| Inactive label | `type.labelSm` · `color.text.subtle` |
+| Badge | `WiomBadgeDot(tone = Critical)` at `Alignment.TopEnd` of the icon |
+
+No fixed item width — each item uses `Modifier.weight(1f)`, so the bar redistributes evenly when the item count changes.

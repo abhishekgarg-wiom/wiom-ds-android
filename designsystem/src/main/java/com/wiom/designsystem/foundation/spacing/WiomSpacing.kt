@@ -5,16 +5,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Wiom spacing primitives — all values on 4px grid.
- *
- * Hierarchy:
- *  - Tight (4–8)   → within one unit (icon + label)
- *  - Medium (12–16) → same section (form field groups)
- *  - Loose (24–32+) → between sections
- *
- * Use `Arrangement.spacedBy(Wiom.spacing.md)` on parents. Children own padding.
- */
+/** Wiom spacing — 4px grid. Parents set gap via Arrangement.spacedBy; children own padding. No margins. */
 @Immutable
 data class WiomSpacing(
     val none: Dp = 0.dp,

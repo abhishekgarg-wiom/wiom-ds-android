@@ -27,7 +27,6 @@ android {
         jvmTarget = "17"
     }
     // Note: publishing is configured by com.vanniktech.maven.publish plugin.
-    // Don't add `android.publishing { singleVariant("release") }` here — it conflicts.
 }
 
 dependencies {
@@ -36,6 +35,8 @@ dependencies {
     api(libs.androidx.compose.ui.graphics)
     api(libs.androidx.compose.foundation)
     api(libs.androidx.compose.material3)
+    api(libs.androidx.compose.material.icons.extended)
+    api(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

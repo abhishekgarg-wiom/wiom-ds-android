@@ -5,12 +5,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Wiom corner radius tokens.
- *
- * Nested rule: inner-radius = outer-radius − padding.
- * Common: 16dp outer + 4dp pad → 12dp inner.
- */
+/** Wiom corner radius. Nested rule: inner = outer − padding. Standard circular (no squircle). */
 @Immutable
 data class WiomRadius(
     val none: Dp = 0.dp,

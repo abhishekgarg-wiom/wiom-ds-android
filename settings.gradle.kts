@@ -22,4 +22,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "wiom-ds-android"
 include(":designsystem")
+include(":designsystem-rules")
 include(":sample")

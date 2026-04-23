@@ -8,115 +8,221 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wiom.designsystem.foundation.icon.WiomIcon
-import com.wiom.designsystem.foundation.icon.WiomIcons
 import com.wiom.designsystem.theme.WiomTheme
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Payment
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.SupportAgent
 
 /**
- * Wiom modal bottom sheet. Surface anchored to screen bottom with scrim.
+ * Wiom Bottom Sheet — Material3 [ModalBottomSheet] wrapped with Wiom tokens.
  *
- * Wrap Material3's [ModalBottomSheet] with Wiom tokens:
- *  - `surface.base` container, `radius.xlarge` top corners only
- *  - `color.overlay.default` scrim
- *  - 32×4dp `border.strong` drag handle (primary dismiss affordance)
+ * Container: `bg.default`, top corners `radius.xlarge`, bottom `radius.none`.
+ * Scrim: `overlay.scrim`. Drag handle: 32×4dp pill, `stroke.strong`, `radius.full`.
  *
- * Compose content with [WiomBottomSheetHeader], [WiomBottomSheetListItem],
- * [WiomBottomSheetIllustration], and [WiomBottomSheetActions].
+ * The 8 content variants from the V2 skill (`Compact`, `Half`, `Expanded`, `Full`,
+ * `Illustration`, `IllustrationCta`, `Share`, `IllustrationLeft`, `Form`) are modelled
+ * as a [WiomBottomSheetSize] enum driving the sheet's height behavior. Content is
+ * slot-based: callers compose the appropriate helpers ([WiomBottomSheetHeader],
+ * [WiomBottomSheetListItem], [WiomBottomSheetIllustration], [WiomBottomSheetActions])
+ * inside the `content` lambda to match the size's anatomy.
+ *
+ * Callers should pass `skipPartiallyExpanded = true` for [WiomBottomSheetSize.Full] or
+ * when the sheet should always open expanded; default [SheetState] is fine for list
+ * variants.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WiomBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    size: WiomBottomSheetSize = WiomBottomSheetSize.Compact,
+    showHandle: Boolean = true,
+    sheetState: SheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = size == WiomBottomSheetSize.Full,
+    ),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val radius = WiomTheme.radius
+    val colors = WiomTheme.color
+
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
-        sheetState = sheetState,
-        containerColor = WiomTheme.colors.surface.base,
-        scrimColor = WiomTheme.colors.overlay.default,
-        shape = RoundedCornerShape(
-            topStart = WiomTheme.radius.xlarge,
-            topEnd = WiomTheme.radius.xlarge,
-            bottomStart = WiomTheme.radius.none,
-            bottomEnd = WiomTheme.radius.none,
-        ),
-        dragHandle = { WiomDragHandle() },
         modifier = modifier,
+        sheetState = sheetState,
+        containerColor = colors.bg.default,
+        contentColor = colors.text.default,
+        scrimColor = colors.overlay.scrim,
+        shape = RoundedCornerShape(
+            topStart = radius.xlarge,
+            topEnd = radius.xlarge,
+            bottomStart = radius.none,
+            bottomEnd = radius.none,
+        ),
+        dragHandle = if (showHandle) {
+            { WiomBottomSheetDragHandle() }
+        } else {
+            null
+        },
     ) {
-        Column(modifier = Modifier.fillMaxWidth(), content = content)
-    }
-}
-
-@Composable
-private fun WiomDragHandle() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = WiomTheme.spacing.sm),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
+        Column(
             modifier = Modifier
-                .size(width = 32.dp, height = 4.dp)
-                .clip(RoundedCornerShape(WiomTheme.radius.full))
-                .background(WiomTheme.colors.border.strong)
+                .fillMaxWidth()
+                .then(size.heightModifier())
+                .navigationBarsPadding(),
+            content = content,
         )
     }
 }
 
-/** Header row with left-aligned title + optional subtitle. Divider below. */
+/**
+ * Size variant for [WiomBottomSheet]. Maps to the V2 skill's 8 size presets. The
+ * enum controls the sheet's height behavior:
+ *
+ * - [Compact] / [Half] / [Expanded] / [Full] — list content; suggested min heights.
+ * - [Illustration] / [IllustrationCta] / [IllustrationLeft] / [Share] / [Form] —
+ *   wrap content (hug height).
+ */
+enum class WiomBottomSheetSize {
+    Compact,
+    Half,
+    Expanded,
+    Full,
+    Illustration,
+    IllustrationCta,
+    IllustrationLeft,
+    Share,
+    Form;
+
+    internal fun heightModifier(): Modifier = when (this) {
+        // Heuristic min-heights from the V2 skill's Kotlin mapping. The sheet
+        // can still expand beyond — ModalBottomSheet's SheetState drives actual
+        // expansion — these just seed the minimum at open.
+        Compact -> Modifier.heightIn(min = 240.dp)
+        Half -> Modifier.heightIn(min = 400.dp)
+        Expanded -> Modifier.heightIn(min = 600.dp)
+        Full -> Modifier.fillMaxWidth()
+        Illustration,
+        IllustrationCta,
+        IllustrationLeft,
+        Share,
+        Form,
+        -> Modifier
+    }
+}
+
+/** 32×4dp pill drag handle — `stroke.strong` fill, `radius.full`, `space.sm` vertical padding. */
+@Composable
+private fun WiomBottomSheetDragHandle(
+    modifier: Modifier = Modifier,
+) {
+    val colors = WiomTheme.color
+    val radius = WiomTheme.radius
+    val spacing = WiomTheme.spacing
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = spacing.sm),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(32.dp)
+                .height(4.dp)
+                .background(
+                    color = colors.stroke.strong,
+                    shape = RoundedCornerShape(radius.full),
+                ),
+        )
+    }
+}
+
+/**
+ * Header row for a list-style bottom sheet.
+ *
+ * Title `type.headingLg` left-aligned; optional subtitle `type.bodyMd` · `text.subtle`
+ * directly below. Padding: `space.xl` left, `space.lg` right, `space.xs` top,
+ * `space.md` bottom. Divider below is `stroke.small` thick, `stroke.subtle` fill.
+ */
 @Composable
 fun WiomBottomSheetHeader(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                start = WiomTheme.spacing.xl,
-                end = WiomTheme.spacing.lg,
-                top = WiomTheme.spacing.xs,
-                bottom = WiomTheme.spacing.md,
-            ),
-        verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs),
-    ) {
-        Text(text = title, style = WiomTheme.type.headingMd, color = WiomTheme.colors.text.primary)
-        subtitle?.let {
-            Text(text = it, style = WiomTheme.type.bodySm, color = WiomTheme.colors.text.secondary)
+    val colors = WiomTheme.color
+    val type = WiomTheme.type
+    val spacing = WiomTheme.spacing
+    val stroke = WiomTheme.stroke
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = spacing.xl,
+                    end = spacing.lg,
+                    top = spacing.xs,
+                    bottom = spacing.md,
+                ),
+            verticalArrangement = Arrangement.spacedBy(spacing.xs),
+        ) {
+            Text(
+                text = title,
+                style = type.headingLg,
+                color = colors.text.default,
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = type.bodyMd,
+                    color = colors.text.subtle,
+                )
+            }
         }
+        HorizontalDivider(
+            thickness = stroke.small,
+            color = colors.stroke.subtle,
+        )
     }
-    HorizontalDivider(
-        thickness = WiomTheme.stroke.small,
-        color = WiomTheme.colors.border.subtle,
-        modifier = Modifier.fillMaxWidth(),
-    )
 }
 
 /**
- * List item row tailored for a bottom sheet — icon in brand-tint circle + label + description + chevron.
+ * List row inside a bottom sheet.
  *
- * Built inline (not via [WiomListItem]) because bottom-sheet rows use **space.xl (24dp)** horizontal
- * padding per the wiom-bottomsheet skill, whereas normal list items use space.lg (16dp).
+ * Built inline (NOT via `WiomListItem`) so it can honor the skill's 24dp
+ * (`space.xl`) horizontal padding — sheet content lines up under the 24dp header
+ * left inset. Icon lives in a 40dp `bg.brandSubtle` circle; label is
+ * `type.labelLg`; chevron is `Icons.Rounded.ChevronRight` 20dp `icon.disabled`.
  */
 @Composable
 fun WiomBottomSheetListItem(
@@ -124,106 +230,383 @@ fun WiomBottomSheetListItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     description: String? = null,
-    icon: Int? = null,
+    icon: ImageVector? = null,
 ) {
+    val colors = WiomTheme.color
+    val type = WiomTheme.type
+    val spacing = WiomTheme.spacing
+    val radius = WiomTheme.radius
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = WiomTheme.spacing.xl, vertical = WiomTheme.spacing.md),
-        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
+            .defaultMinSize(minHeight = 48.dp)
+            .padding(horizontal = spacing.xl, vertical = spacing.md),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.md),
     ) {
-        icon?.let { iconId ->
+        if (icon != null) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
-                    .background(WiomTheme.colors.brand.primaryTint),
+                    .background(
+                        color = colors.bg.brandSubtle,
+                        shape = RoundedCornerShape(radius.full),
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
-                WiomIcon(id = iconId, contentDescription = null, size = 20.dp, tint = WiomTheme.colors.brand.primary)
+                WiomIcon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    size = WiomTheme.iconSize.sm,
+                    tint = colors.icon.brand,
+                )
             }
         }
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs),
+            modifier = Modifier
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(spacing.xxs),
         ) {
-            Text(text = label, style = WiomTheme.type.labelMd, color = WiomTheme.colors.text.primary)
-            description?.let {
-                Text(text = it, style = WiomTheme.type.bodySm, color = WiomTheme.colors.text.secondary)
+            Text(
+                text = label,
+                style = type.labelLg,
+                color = colors.text.default,
+            )
+            if (description != null) {
+                Text(
+                    text = description,
+                    style = type.bodyMd,
+                    color = colors.text.subtle,
+                )
             }
         }
         WiomIcon(
-            id = WiomIcons.expandMore,
+            imageVector = Icons.Rounded.ChevronRight,
             contentDescription = null,
-            size = 20.dp,
-            tint = WiomTheme.colors.text.disabled,
-        )
-    }
-}
-
-/** Illustration layout — 120dp brand-tint circle with 48dp icon + centered heading + subtext. */
-@Composable
-fun WiomBottomSheetIllustration(
-    icon: Int,
-    heading: String,
-    subtext: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                start = WiomTheme.spacing.xl,
-                end = WiomTheme.spacing.xl,
-                top = WiomTheme.spacing.lg,
-                bottom = WiomTheme.spacing.xl,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-                .background(WiomTheme.colors.brand.primaryTint),
-            contentAlignment = Alignment.Center,
-        ) {
-            WiomIcon(id = icon, contentDescription = null, size = WiomTheme.icon.lg, tint = WiomTheme.colors.brand.primary)
-        }
-        Text(
-            text = heading,
-            style = WiomTheme.type.headingMd,
-            color = WiomTheme.colors.text.primary,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = subtext,
-            style = WiomTheme.type.bodyMd,
-            color = WiomTheme.colors.text.secondary,
-            textAlign = TextAlign.Center,
+            size = WiomTheme.iconSize.sm,
+            tint = colors.icon.disabled,
         )
     }
 }
 
 /**
- * Action bar — row of primary/secondary buttons at the bottom of the sheet.
- * Divider above. Pass your buttons (or `WiomCta` when available) via [content].
+ * Centered illustration block for Illustration / IllustrationCta / Share variants.
+ *
+ * 120dp `bg.brandSubtle` circle with a 48dp `icon.brand` glyph centered. Heading is
+ * `type.headingLg` centered; subtext is `type.bodyLg` · `text.subtle` centered.
+ * Padding: `space.xl` horizontal, `space.lg` top, `space.xl` bottom.
+ */
+@Composable
+fun WiomBottomSheetIllustration(
+    icon: ImageVector,
+    heading: String,
+    subtext: String,
+    modifier: Modifier = Modifier,
+) {
+    val colors = WiomTheme.color
+    val type = WiomTheme.type
+    val spacing = WiomTheme.spacing
+    val radius = WiomTheme.radius
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                start = spacing.xl,
+                end = spacing.xl,
+                top = spacing.lg,
+                bottom = spacing.xl,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(spacing.lg),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(
+                    color = colors.bg.brandSubtle,
+                    shape = RoundedCornerShape(radius.full),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            WiomIcon(
+                imageVector = icon,
+                contentDescription = null,
+                size = WiomTheme.iconSize.lg,
+                tint = colors.icon.brand,
+            )
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.sm),
+        ) {
+            Text(
+                text = heading,
+                style = type.headingLg,
+                color = colors.text.default,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = subtext,
+                style = type.bodyLg,
+                color = colors.text.subtle,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+/**
+ * Bottom action bar for a bottom sheet.
+ *
+ * Divider above (`stroke.small`, `stroke.subtle`). Row has `space.xl` horizontal,
+ * `space.lg` vertical padding and a `space.md` gap between children. Callers place
+ * 1–3 `WiomButton` instances via the [RowScope].
  */
 @Composable
 fun WiomBottomSheetActions(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
-    HorizontalDivider(thickness = WiomTheme.stroke.small, color = WiomTheme.colors.border.subtle)
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = WiomTheme.spacing.xl, vertical = WiomTheme.spacing.lg),
-        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        content()
+    val colors = WiomTheme.color
+    val spacing = WiomTheme.spacing
+    val stroke = WiomTheme.stroke
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        HorizontalDivider(
+            thickness = stroke.small,
+            color = colors.stroke.subtle,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.xl, vertical = spacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
+            content = content,
+        )
     }
 }
+
+// region Previews — one per size variant. No real sheet state; we render the
+// inner column so the spec (header + content anatomy) is verifiable.
+
+@Composable
+private fun PreviewFrame(content: @Composable ColumnScope.() -> Unit) {
+    WiomTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(WiomTheme.color.bg.default),
+            content = content,
+        )
+    }
+}
+
+@Preview(name = "Compact", showBackground = true)
+@Composable
+private fun PreviewCompact() {
+    PreviewFrame {
+        WiomBottomSheetHeader(title = "Policy options")
+        WiomBottomSheetListItem(
+            label = "View policy details",
+            icon = Icons.Rounded.Description,
+            onClick = {},
+        )
+        WiomBottomSheetListItem(
+            label = "Contact support",
+            icon = Icons.Rounded.SupportAgent,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Half", showBackground = true)
+@Composable
+private fun PreviewHalf() {
+    PreviewFrame {
+        WiomBottomSheetHeader(
+            title = "Filter plans",
+            subtitle = "3 filters applied",
+        )
+        WiomBottomSheetListItem(
+            label = "Unlimited",
+            icon = Icons.Rounded.Check,
+            onClick = {},
+        )
+        WiomBottomSheetListItem(
+            label = "Cheapest",
+            icon = Icons.Rounded.Check,
+            onClick = {},
+        )
+        WiomBottomSheetListItem(
+            label = "Newest",
+            icon = Icons.Rounded.Check,
+            onClick = {},
+        )
+        WiomBottomSheetListItem(
+            label = "Recommended",
+            icon = Icons.Rounded.Check,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Expanded", showBackground = true)
+@Composable
+private fun PreviewExpanded() {
+    PreviewFrame {
+        WiomBottomSheetHeader(title = "Manage account")
+        repeat(6) { index ->
+            WiomBottomSheetListItem(
+                label = "Action $index",
+                description = "Short description",
+                icon = Icons.Rounded.Edit,
+                onClick = {},
+            )
+        }
+    }
+}
+
+@Preview(name = "Full", showBackground = true)
+@Composable
+private fun PreviewFull() {
+    PreviewFrame {
+        WiomBottomSheetHeader(title = "Terms & conditions")
+        repeat(8) { index ->
+            WiomBottomSheetListItem(
+                label = "Section $index",
+                icon = Icons.Rounded.Description,
+                onClick = {},
+            )
+        }
+    }
+}
+
+@Preview(name = "Illustration", showBackground = true)
+@Composable
+private fun PreviewIllustration() {
+    PreviewFrame {
+        WiomBottomSheetIllustration(
+            icon = Icons.Rounded.Check,
+            heading = "Payment successful",
+            subtext = "Rs 299 has been charged. Your plan is active until 15 May 2026.",
+        )
+    }
+}
+
+@Preview(name = "IllustrationCta", showBackground = true)
+@Composable
+private fun PreviewIllustrationCta() {
+    PreviewFrame {
+        WiomBottomSheetIllustration(
+            icon = Icons.Rounded.Payment,
+            heading = "Pay Rs 299?",
+            subtext = "Monthly recharge for Plan A. Amount will be debited from your UPI account.",
+        )
+        WiomBottomSheetActions {
+            // Caller places WiomButton instances here. Preview shows the frame.
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Preview(name = "IllustrationLeft", showBackground = true)
+@Composable
+private fun PreviewIllustrationLeft() {
+    PreviewFrame {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = WiomTheme.spacing.xl,
+                    end = WiomTheme.spacing.xl,
+                    top = WiomTheme.spacing.lg,
+                    bottom = WiomTheme.spacing.xl,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .background(
+                        color = WiomTheme.color.bg.brandSubtle,
+                        shape = RoundedCornerShape(WiomTheme.radius.full),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                WiomIcon(
+                    imageVector = Icons.Rounded.Share,
+                    contentDescription = null,
+                    size = WiomTheme.iconSize.lg,
+                    tint = WiomTheme.color.icon.brand,
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
+            ) {
+                Text(
+                    text = "Share your plan",
+                    style = WiomTheme.type.headingLg,
+                    color = WiomTheme.color.text.default,
+                )
+                Text(
+                    text = "Invite friends to Wiom with a one-tap share link.",
+                    style = WiomTheme.type.bodyLg,
+                    color = WiomTheme.color.text.subtle,
+                )
+            }
+        }
+    }
+}
+
+@Preview(name = "Share", showBackground = true)
+@Composable
+private fun PreviewShare() {
+    PreviewFrame {
+        WiomBottomSheetHeader(title = "Share your plan")
+        WiomBottomSheetListItem(
+            label = "Share via message",
+            icon = Icons.Rounded.Share,
+            onClick = {},
+        )
+        WiomBottomSheetListItem(
+            label = "Download as PDF",
+            icon = Icons.Rounded.Download,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "Form", showBackground = true)
+@Composable
+private fun PreviewForm() {
+    PreviewFrame {
+        WiomBottomSheetHeader(
+            title = "Edit display name",
+            subtitle = "Visible on your Wiom profile",
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = WiomTheme.spacing.xl, vertical = WiomTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
+        ) {
+            // Caller inserts WiomInput here in real usage.
+            Text(
+                text = "[ WiomInput slot ]",
+                style = WiomTheme.type.bodyLg,
+                color = WiomTheme.color.text.subtle,
+            )
+        }
+        WiomBottomSheetActions {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+// endregion

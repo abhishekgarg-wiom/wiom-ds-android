@@ -5,14 +5,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Wiom shadow/elevation tokens.
- *
- * Rule: A component uses EITHER a border OR a shadow, never both.
- * Default to [md]. Max 1–2 [lg] per screen. [xl] always pairs with overlay.
- *
- * Compose uses elevation (Dp) to approximate Figma shadow tokens.
- */
+/** Wiom elevation tokens. Shadow XOR border — never both. shadow.xl always pairs with overlay.scrim. */
 @Immutable
 data class WiomShadow(
     val none: Dp = 0.dp,
