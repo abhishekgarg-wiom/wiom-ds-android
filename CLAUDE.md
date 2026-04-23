@@ -1,194 +1,165 @@
-# CLAUDE.md — Rules for Claude Code in the Wiom Design System repo
+# CLAUDE.md — Rules for Claude Code in `wiom-ds-android`
 
-This file is loaded automatically whenever Claude Code operates in this repository. Every session must follow these rules. Violations will be caught by review.
+Loaded on every session in this repo. Breaking these rules breaks the design system.
 
 ---
 
 ## 0. Product context
 
-Wiom serves Indian households (as of 2026-04-15). Every design decision should assume:
+Wiom serves Indian households (as of 2026-04-23). Design assumptions:
 
-- **India-only userbase.** No country code prefixes in phone fields — use leading phone icon.
-- **Currency:** INR only (`₹` prefix).
-- **Languages:** Hindi + English. Budget for 1.3x text expansion.
-- **Devices:** Budget Android (min SDK 24). Small screens, outdoor use, variable lighting.
-- **Tone:** Trust-heavy (payments, recharges, plans). Low cognitive load. Clear and scannable.
-
----
-
-## 1. Token-only rule (hard block)
-
-**No raw hex, sp, dp, or font family literals outside `designsystem/foundation/`.**
-
-Every visual value must come from `WiomTheme.colors`, `WiomTheme.type`, `WiomTheme.spacing`, `WiomTheme.radius`, `WiomTheme.stroke`, `WiomTheme.shadow`, or `WiomTheme.icon`.
-
-**Allowed:**
-```kotlin
-Modifier.padding(WiomTheme.spacing.lg)
-color = WiomTheme.colors.text.primary
-```
-
-**Forbidden:**
-```kotlin
-Modifier.padding(16.dp)                    // use WiomTheme.spacing.lg
-color = Color(0xFF161021)                  // use WiomTheme.colors.text.primary
-fontSize = 14.sp                            // use WiomTheme.type.bodyMd
-```
-
-Exception: inside foundation files themselves, where the canonical values are defined.
+- **India-only userbase.** No country-code prefixes on phone fields — use a leading phone icon.
+- **Currency:** INR only (`₹`).
+- **Languages:** Hindi + English (budget 1.3× text expansion).
+- **Devices:** Budget Android, min SDK 24. Outdoor-readable.
+- **Consumers:** **Partner app** (active Flutter → Kotlin rewrite — new screens build daily with this library) and **Customer app** (live in Kotlin, new features only).
 
 ---
 
-## 2. Intrinsic sizing rule (accessibility-critical)
+## 1. Element-first tokens — hard rule
 
-**Components MUST NOT set fixed `height` or `width` on wrappers.**
+All colors are element-first. Four namespaces map 1:1 to Compose slots:
 
-Size must emerge from content + padding + stroke. Rationale: when users increase system font size, fixed-height components clip or overflow.
+- `Box(background=…)`, `Modifier.background(…)`, `Surface(color=…)` → **`WiomTheme.color.bg.*`**
+- `Text(color=…)` → **`WiomTheme.color.text.*`**
+- `BorderStroke(…)`, `Modifier.border(…)`, `Divider` → **`WiomTheme.color.stroke.*`**
+- `Icon(tint=…)` → **`WiomTheme.color.icon.*`**
 
-**Allowed:**
-```kotlin
-// Height emerges from text line-height + vertical padding
-Row(modifier = Modifier.padding(
-    horizontal = WiomTheme.spacing.lg,
-    vertical = WiomTheme.spacing.md,
-)) { Text(...) }
-```
+Legacy role-first tokens (`color.brand.primary`, `color.warning.primary`, `colors.positive.soft`) are **gone** in v1.0.0. Don't resurrect them.
 
-**Forbidden:**
-```kotlin
-Modifier.height(48.dp)          // hardcoded height breaks font scaling
-Modifier.size(56.dp)            // fixed size on a text-bearing component
-```
-
-**Exception:** icon-only square touch targets (e.g., a 48dp icon button for a11y). Must be documented in the component README with justification.
+Never use raw hex / sp / dp literals in component code. Foundation files are the only place those are defined.
 
 ---
 
-## 3. Icon sourcing rule
+## 2. Icons — Material 3 Icons Rounded only
 
-**Consumers must use `WiomIcons.<name>` only.** Never import `Icons.Default`, `Icons.Filled`, `Icons.Outlined`, `Icons.Sharp`, or `Icons.TwoTone`.
-
-To add a new icon:
-1. Download from https://fonts.google.com/icons?icon.style=Rounded (filled=1, weight=400)
-2. Convert SVG to Android Vector Drawable
-3. Place in `designsystem/src/main/res/drawable/wiom_ic_<name>.xml`
-4. Add `@DrawableRes val <name>` to `WiomIcons.kt`
-
-Use a custom drawable (outside `WiomIcons`) only when the glyph is visually unique to a product surface and cannot be represented by a standard Material Symbols icon.
+- **Use:** `Icons.Rounded.*` from `androidx.compose.material:material-icons-extended` (already a transitive dep via the library).
+- **Wrapper:** `WiomIcon(imageVector, contentDescription, size, tint)` applies Wiom token defaults.
+- **Never use:** `Icons.Default.*`, `Icons.Filled.*`, `Icons.Outlined.*`, `Icons.Sharp.*`, `Icons.TwoTone.*`.
+- **`painterResource(R.drawable.…)`** is reserved for `ic_wiom_*` and `ic_partner_*` brand assets only — never for standard Material icons.
+- **Tint** uses `WiomTheme.color.icon.*` tokens (`icon.action` for tappable chrome, `icon.nonAction` for decorative, `icon.inverse` on colored CTA fills). Never `text.on*` as an icon tint.
 
 ---
 
-## 4. Use-case documentation rule
+## 3. Typography defaults
 
-Every component README must include a **"When to use which variant"** section with concrete Wiom examples — not generic ones.
+- **Default reading text:** `type.bodyLg` (16sp Regular Noto Sans).
+- **Default interactive text:** `type.labelLg` (16sp SemiBold) — CTA, input label, radio/checkbox/switch, toast action.
+- **Page / dialog / bottom-sheet header:** `type.headingLg` (24 Bold). `headingMd` (20) only for compact secondary sheets.
+- **Chat bubble body:** `type.bodyMd` (14) — intentional exception for density.
+- **Never** sub-14sp for Hindi body text. `meta.xs` (10sp) only for chat-bubble timestamps and badge counts.
 
-Example (good):
-> **Phone number → leading `phone` icon, no prefix.** Reason: Wiom users are Indian-only as of 2026. `+91` prefix is redundant and adds friction.
-
-Example (bad — generic):
-> "Use leading icon to show the type of input."
-
----
-
-## 5. Component authoring checklist
-
-When adding or modifying a component, every change must:
-
-- [ ] Use only `WiomTheme.*` tokens (no hex/dp/sp literals)
-- [ ] Follow intrinsic sizing rule (no fixed height/width)
-- [ ] Expose `modifier: Modifier = Modifier` as first optional param
-- [ ] Include `@Preview` for every variant × state combination
-- [ ] Include a README.md in the component folder with: purpose, when to use / not to use, variants, states, all params (typed), usage examples, do/don't, accessibility notes, changelog
-- [ ] Have entries in the sample app (`:sample`) showing real usage
-- [ ] Pass `./gradlew :designsystem:assembleRelease` cleanly
+Noto Sans is loaded via Google Fonts Compose provider. Play Services must be available on the device. Fallback is handled by the provider.
 
 ---
 
-## 6. Versioning rules
+## 4. Intrinsic sizing
 
-Semantic versioning. Tag format: `v<major>.<minor>.<patch>`.
+Components MUST NOT set fixed `height` or `width` on wrappers that contain text. Height emerges from content + padding + stroke. Rationale: system font scaling.
 
-- **Major** (1.0.0 → 2.0.0) — breaking public API change (removed/renamed params, removed components)
-- **Minor** (0.1.0 → 0.2.0) — new component, new param with default, new variant
-- **Patch** (0.1.0 → 0.1.1) — bug fix, visual tweak that doesn't change API
+`defaultMinSize(minHeight = 48.dp)` is OK for touch targets. Fixed `height(…)` / `size(…)` is not.
 
-Pre-1.0 rules are relaxed — minor bumps may include breaking changes. Document in CHANGELOG.md.
+Exception: icon-only square touch targets, drag handles, thumbs, and atoms whose dimensions are part of their spec (checkbox 20dp indicator, switch 52×32 track, stepper 32dp circle).
 
 ---
 
-## 7. Commit style
+## 5. Filled state = no border
 
-Conventional Commits. First line under 72 chars.
-
-```
-feat(input): add OTP variant with resend countdown
-fix(button): correct disabled token to text.disabled
-breaking(topbar): rename `subtitle` to `description`
-chore(ci): bump AGP to 8.8.0
-docs(input): add phone number use-case example
-```
+Checked checkbox, toggled switch, selected chip, filled button — fill IS the boundary. Remove the stroke.
 
 ---
 
-## 8. Repo layout (authoritative)
+## 6. Status color mixing
+
+Each status family (**positive / critical / warning / info**) is self-contained. A success icon never sits on a warning surface; a critical border never wraps a positive card.
+
+**Warning is the one-token family** — only `text.onWarning` (#372902 olive) for body text on warning surfaces AND for warning-tinted inline text on `bg.default`. No `text.warning` exists.
+
+**Text on banners:**
+- Critical / Positive → `text.default` for body, `text.critical` / `text.positive` for heading + icon.
+- Warning → `text.onWarning` everywhere in the warning family.
+- Info → `text.default` or `text.info`.
+
+---
+
+## 7. Touch targets (three tiers)
+
+- **Action** 48×48dp — high-consequence icons (delete, edit, share, close, menu, back)
+- **Navigation** 32×32dp — frequent-use (expand, sort, arrows, pagination, filter)
+- **Info** 24×24dp — low-stakes (help, tooltip triggers, status indicators)
+
+Buttons reach 48dp naturally via `space.md` vertical padding + 24sp line-height.
+
+---
+
+## 8. Shadow vs border — never both
+
+Flat → 1px border. Elevated → shadow. Exception: critical payment cards may pair `shadow.md` + `stroke.small` + `stroke.subtle` for budget-device robustness.
+
+`shadow.xl` always pairs with `overlay.scrim` (modal backdrop).
+
+---
+
+## 9. Repo layout
 
 ```
 designsystem/src/main/
 ├── java/com/wiom/designsystem/
 │   ├── foundation/
-│   │   ├── color/       ← 43 semantic color tokens
-│   │   ├── typography/  ← 13 type tokens (Noto Sans)
-│   │   ├── spacing/     ← 13 spacing tokens (4px grid)
-│   │   ├── radius/      ← 7 radius tokens
-│   │   ├── stroke/      ← 2 stroke tokens
-│   │   ├── shadow/      ← 5 elevation tokens
-│   │   └── icon/        ← WiomIconSize, WiomIcon composable, WiomIcons facade
+│   │   ├── color/       ← WiomColors (bg/text/stroke/icon/overlay)
+│   │   ├── typography/  ← WiomTypography (Noto Sans via Google Fonts)
+│   │   ├── spacing/     ← WiomSpacing (4px grid)
+│   │   ├── radius/      ← WiomRadius
+│   │   ├── stroke/      ← WiomStroke + focus-ring tokens
+│   │   ├── shadow/      ← WiomShadow
+│   │   └── icon/        ← WiomIconSize, WiomIcon (Material 3 Rounded wrapper)
 │   ├── theme/
-│   │   └── WiomTheme.kt ← root theme composable + token accessor
+│   │   └── WiomTheme.kt ← root theme + WiomTheme.color / .type / .spacing / .radius / .stroke / .shadow / .iconSize
 │   └── component/
 │       └── <name>/
 │           ├── Wiom<Name>.kt
-│           ├── Wiom<Name>Previews.kt
 │           └── README.md
-└── res/drawable/
-    └── wiom_ic_*.xml    ← Material Symbols Rounded icon set
+└── res/
+    ├── drawable/        ← only ic_wiom_* / ic_partner_* brand assets
+    └── values/
+        └── font_certs.xml ← Google Fonts provider certs
 ```
 
 ---
 
-## 9. What to do when asked to build a new component
+## 10. Skill precedence
 
-1. **Load `wiom-design-foundations`** — this is the **single source of truth** for colors, typography, spacing, radius, stroke, shadow, iconography. Every design decision cross-checks against it. (Note: `wiom-visual-skill` is a separate philosophy / principles document and is **not** used to drive component code — don't derive tokens or spacings from it.)
-2. **Load the component-specific skill** (e.g., `wiom-input-fields`, `wiom-top-bar`, `wiom-stepper`). These skills are the **per-component spec** and cite tokens that live in `wiom-design-foundations`.
-3. **Ask for the Figma link** if not provided. Do not invent visual details.
-4. **Get Figma context** via the `mcp__figma__get_design_context` tool (user must select the node in Figma desktop first).
-5. **Check if Material Symbols Rounded has the required icons.** If yes, add to `WiomIcons`. If no, ask the user whether to create a custom drawable.
-6. **Follow checklist in Rule 5.**
-7. **Propose the version bump** when done (patch/minor/major).
+`wiom-design-foundations` is the **single source of truth** for tokens. When a component skill cites a value that conflicts with the foundation, **treat it as a skill bug and flag** — don't encode the drift.
 
-**Rule of precedence when skills disagree:** `wiom-design-foundations` wins. If a component-specific skill cites a token value that differs from the foundation, treat it as a bug in the component skill and flag it — don't encode the drift.
+Current cached skills (post–V2 refresh): `.skills-cache/` in the repo (gitignored).
 
 ---
 
-## 10. What NOT to do
+## 11. When building or modifying a component
 
-- Do not modify `WiomColors` hex values without explicit approval. These come from the `wiom-design-foundations` skill and must stay in sync with Figma.
-- Do not add new tokens. If a gap exists, surface it — don't paper over it with a raw value.
-- Do not add a component without loading the design foundations skill first.
-- Do not commit `local.properties`, `*.keystore`, or any file containing secrets.
-- Do not use `Icons.Default.*`. Period.
-- Do not set fixed heights on components that contain text.
-- Do not mix feedback color families (e.g., red border on a positive card).
-- Do not publish new versions without updating `CHANGELOG.md`.
+1. Read the component's skill in `.skills-cache/`.
+2. Cross-check every token citation against `wiom-design-foundations`.
+3. Use **only** `WiomTheme.color.*` / `type.*` / `spacing.*` / `radius.*` / `stroke.*` / `shadow.*` / `iconSize.*`.
+4. Use **only** `Icons.Rounded.*` for icons.
+5. Follow intrinsic-sizing rule.
+6. Provide `modifier: Modifier = Modifier` as first optional param.
+7. Add `@Preview` covering every variant × state.
+8. Write a short README.md in the component folder: purpose, variants, API, Wiom use cases, rules, tokens.
+9. Update `CHANGELOG.md` under `[Unreleased]`.
+10. Propose the version bump when done.
 
 ---
 
-## Open TODOs for the next Claude session
+## 12. Hard prohibitions
 
-- Wire Google Fonts provider for Noto Sans (v0.1 uses `FontFamily.Default`).
-- Add Paparazzi screenshot testing.
-- Add Detekt lint rule that fails on raw hex/dp/sp outside `foundation/`.
-- Build `WiomInput` component from Figma (`node-id=1329:120`).
-- Grow `WiomIcons` drawable set as components demand.
-
-Ask the user before starting any of these unless explicitly requested.
+- Raw hex / sp / dp literals outside `foundation/`
+- `Icons.Default` / `Icons.Filled` / `Icons.Outlined` / `Icons.Sharp` / `Icons.TwoTone`
+- `painterResource` for a non-brand icon
+- Fixed heights on text-bearing components
+- Border + shadow on the same component
+- Border on a filled/checked/toggled component
+- Legacy role-first tokens (`color.brand.primary`, `warning.soft`, etc.)
+- Pre-checked consent checkboxes
+- Red button for non-destructive actions
+- Titles + subtitles concatenated into one string
+- `WiomDropdown` (deleted in v1.0.0 — use `WiomInput(readOnly=true)` + chevron + bottom-sheet picker)

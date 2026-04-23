@@ -1,62 +1,144 @@
-# WiomInput & WiomTextarea
+# WiomInput / WiomTextarea
 
-Single-line (`WiomInput`) and multi-line (`WiomTextarea`) form fields. Search is an `Input` configuration, not a separate component.
+Text-entry primitives for every form in the Wiom app. `WiomInput` is single-line; `WiomTextarea`
+is multi-line. Search bars, OTP fields, currency fields, password fields and dropdown triggers
+are all configurations of `WiomInput` — don't build custom rectangles.
 
 ## Anatomy
 
 ```
-[ Title (top, label.md) ]
-╭─────────────────────────────────────────────────╮
-│  [lead] [prefix] value/placeholder [suffix] [tr] │  ← container: radius.medium, stroke
-╰─────────────────────────────────────────────────╯
-[ Helper (body.sm, left) ]           [ Counter (right) ]
+Title                                               ← type.labelLg
+┌────────────────────────────────────────────────┐
+│ [lead]  prefix  value / placeholder  suffix  [trail] │  ← bordered container, radius.medium
+└────────────────────────────────────────────────┘
+Helper text                                  Counter ← type.bodyMd · text.subtle
 ```
 
-Height is **intrinsic** — padding + body line-height. Never set a fixed height.
+Padding: `space.lg` H × `space.md` V · Internal gap: `space.md` · Title → container → helper
+gap: `space.sm`.
 
-## States
+## API
 
-The component derives `Default / Focused / Filled` automatically from focus + value.
-You explicitly set:
+```kotlin
+@Composable
+fun WiomInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    placeholder: String? = null,
+    helper: String? = null,
+    counter: String? = null,
+    leadingIcon: ImageVector? = null,
+    trailingIcon: ImageVector? = null,
+    onTrailingIconClick: (() -> Unit)? = null,
+    prefix: String? = null,
+    suffix: String? = null,
+    status: WiomInputStatus = WiomInputStatus.None,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    onClick: (() -> Unit)? = null,
+)
 
-- `enabled = false` → Disabled
-- `readOnly = true` → Read-only (text copyable, not editable)
-- `status = WiomFieldStatus.Error | Success | Warning` → status border + status icon
+@Composable
+fun WiomTextarea(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    placeholder: String? = null,
+    helper: String? = null,
+    counter: String? = null,
+    status: WiomInputStatus = WiomInputStatus.None,
+    enabled: Boolean = true,
+    readOnly: Boolean = false,
+    minLines: Int = 3,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+)
 
-Status icons auto-fill the trailing slot and override any `trailingIcon` you pass.
+enum class WiomInputStatus { None, Error, Success, Warning }
+```
+
+### `status` vs `enabled` vs `readOnly`
+
+These are three independent axes. You can have a `readOnly` field that is also in `Error`.
+
+| Axis      | Values                           | What it does                                                        |
+|-----------|----------------------------------|---------------------------------------------------------------------|
+| `status`  | None / Error / Success / Warning | Border colour + helper colour + auto trailing status icon           |
+| `enabled` | `true` / `false`                 | Disabled fades content to `text.disabled` and fill to `bg.disabled` |
+| `readOnly`| `true` / `false`                 | Value is visible and copyable but not editable. Fill `bg.subtle`    |
+
+## Statuses
+
+| Status | Border (when active / focused) | Helper text colour    | Auto trailing icon              |
+|--------|--------------------------------|-----------------------|---------------------------------|
+| None   | `stroke.brandFocus` 2dp (focus) / `stroke.subtle` 1dp (rest) | `text.subtle` | (caller-supplied, optional)    |
+| Error  | `stroke.criticalFocus` 2dp     | `text.critical`       | `Icons.Rounded.Error`           |
+| Success| `stroke.positiveFocus` 2dp     | `text.positive`       | `Icons.Rounded.CheckCircle`     |
+| Warning| `stroke.brandFocus` 2dp        | `text.onWarning`      | `Icons.Rounded.Warning`         |
+
+> Status icons override any caller-supplied `trailingIcon`. One trailing icon at a time.
+
+## Tokens used
+
+| Part                 | Token                                                        |
+|----------------------|--------------------------------------------------------------|
+| Container fill (rest)| `bg.default`                                                 |
+| Container fill (read-only) | `bg.subtle`                                            |
+| Container fill (disabled)  | `bg.disabled`                                          |
+| Border rest          | `stroke.small` + `stroke.subtle`                             |
+| Border focus         | `stroke.medium` + `stroke.brandFocus`                        |
+| Border error         | `stroke.medium` + `stroke.criticalFocus`                     |
+| Border success       | `stroke.medium` + `stroke.positiveFocus`                     |
+| Container radius     | `radius.medium`                                              |
+| Padding              | `space.lg` H × `space.md` V                                  |
+| Internal gap         | `space.md`                                                   |
+| Vertical gap         | `space.sm`                                                   |
+| Title                | `type.labelLg` · `text.default` (rest) / `text.subtle` (filled, focused, readOnly) / `text.disabled` |
+| Value / prefix / suffix | `type.bodyLg` · `text.default` (value) / `text.subtle` (affixes) |
+| Placeholder          | `type.bodyLg` · `text.disabled`                              |
+| Helper               | `type.bodyMd` · `text.subtle` / `text.critical` / `text.positive` / `text.onWarning` |
+| Counter              | `type.bodyMd` · `text.subtle`                                |
+| Leading icon         | `iconSize.sm` · `icon.nonAction`                             |
+| Trailing icon (user) | `iconSize.sm` · `icon.action`                                |
+| Trailing icon (error/success/warning) | `icon.critical` / `icon.positive` / `icon.warning` |
 
 ## Configuration patterns
 
-### Phone number (Indian context — no country code)
+### Phone (India-only — no `+91` prefix)
 
 ```kotlin
 WiomInput(
     value = phone,
-    onValueChange = { phone = it },
+    onValueChange = { phone = it.filter(Char::isDigit).take(10) },
     title = "Mobile number",
-    leadingIcon = { WiomIcon(WiomIcons.phone, null, size = WiomTheme.icon.sm, tint = WiomTheme.colors.text.secondary) },
-    helper = "We'll send an OTP",
+    leadingIcon = Icons.Rounded.Phone,
+    helper = "We'll send you an OTP",
     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
 )
 ```
 
-> **Why leading icon, not `+91` prefix?** Wiom is India-only — every user dials an Indian number. `+91` adds friction and wastes visible characters. The phone icon communicates the field type without the redundant code.
+The Wiom customer base is India-only — do NOT prepend `+91`. A leading phone icon is the
+country-code affordance.
 
-### OTP with timer
+### OTP with resend-timer counter
 
 ```kotlin
 WiomInput(
     value = otp,
-    onValueChange = { otp = it },
-    title = "Enter 6-digit OTP",
-    counter = formatTimer(secondsLeft),          // e.g. "00:24"
-    trailingIcon = {
-        WiomIcon(WiomIcons.refresh, "Resend", size = WiomTheme.icon.sm,
-                 modifier = Modifier.clickable(enabled = secondsLeft == 0) { resend() })
-    },
+    onValueChange = { otp = it.filter(Char::isDigit).take(6) },
+    title = "Enter OTP",
+    helper = "Didn't get the code?",
+    counter = "Resend in 00:24",           // put the timer in the counter slot
     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
 )
 ```
+
+This is the "single box" OTP. For the boxed 4/6-digit entry with per-digit focus, a dedicated
+`WiomOtp` component is planned.
 
 ### Search
 
@@ -64,21 +146,19 @@ WiomInput(
 WiomInput(
     value = query,
     onValueChange = { query = it },
-    placeholder = "Search plans, offers, bills",
-    leadingIcon = { WiomIcon(WiomIcons.search, null, size = WiomTheme.icon.sm, tint = WiomTheme.colors.text.secondary) },
-    trailingIcon = if (query.isNotEmpty()) {
-        { WiomIcon(WiomIcons.cancel, "Clear", size = WiomTheme.icon.sm,
-                   modifier = Modifier.clickable { query = "" }) }
-    } else null,
+    placeholder = "Search plans, routers…",
+    leadingIcon = Icons.Rounded.Search,
+    trailingIcon = if (query.isNotEmpty()) Icons.Rounded.Cancel else null,
+    onTrailingIconClick = { query = "" },
 )
 ```
 
-### Currency
+### Currency (₹ prefix, `.00` suffix)
 
 ```kotlin
 WiomInput(
     value = amount,
-    onValueChange = { amount = it },
+    onValueChange = { amount = it.filter(Char::isDigit) },
     title = "Recharge amount",
     prefix = "₹",
     suffix = ".00",
@@ -87,77 +167,70 @@ WiomInput(
 )
 ```
 
-### Password with visibility toggle
+Never type `₹` into the value — it breaks validation and copy-paste. Always use the `prefix`
+slot.
+
+### Password (visibility toggle)
 
 ```kotlin
-var visible by remember { mutableStateOf(false) }
+var revealed by remember { mutableStateOf(false) }
 WiomInput(
     value = password,
     onValueChange = { password = it },
     title = "Password",
-    visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
-    trailingIcon = {
-        WiomIcon(
-            id = if (visible) WiomIcons.visibilityOff else WiomIcons.visibility,
-            contentDescription = if (visible) "Hide password" else "Show password",
-            size = WiomTheme.icon.sm,
-            modifier = Modifier.clickable { visible = !visible },
-        )
-    },
+    leadingIcon = Icons.Rounded.Lock,
+    trailingIcon = if (revealed) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+    onTrailingIconClick = { revealed = !revealed },
+    visualTransformation = if (revealed) VisualTransformation.None else PasswordVisualTransformation(),
 )
 ```
 
-### Read-only (Customer ID, account number)
+### Dropdown-replacement pattern
+
+`WiomDropdown` was removed in v1.0.0. Use `WiomInput(readOnly = true)` + chevron trailing +
+`onClick` to open a `WiomBottomSheet` picker.
 
 ```kotlin
+var language by remember { mutableStateOf<Language?>(null) }
+var showSheet by remember { mutableStateOf(false) }
+
 WiomInput(
-    value = "CUST-2045",
+    value = language?.label ?: "",
     onValueChange = {},
-    title = "Customer ID",
+    title = "Language",
+    placeholder = "Select language",
+    trailingIcon = Icons.Rounded.KeyboardArrowDown,
     readOnly = true,
+    onClick = { showSheet = true },
 )
+if (showSheet) {
+    WiomBottomSheet(onDismiss = { showSheet = false }) {
+        // WiomListItem(type = Radio, selected = …, primary = …)
+    }
+}
 ```
 
-Read-only ≠ disabled. Text stays `text.primary`, container uses `surface.subtle` + `border.subtle`. User can select/copy.
-
-### Address (Textarea)
-
-```kotlin
-WiomTextarea(
-    value = address,
-    onValueChange = { address = it },
-    title = "Installation address",
-    counter = "${address.length} / 200",
-    minLines = 3,
-)
-```
+Notes:
+- `readOnly = true` — the user cannot type into a dropdown field.
+- `onClick` fires only when `readOnly = true` and `enabled = true`. In any other state the
+  container swallows clicks so the text field receives focus.
+- `text.default` for the value (not `text.subtle`) — the user can read / copy the selection.
 
 ## Rules
 
-1. **Label default color = `text.primary`.** Softens to `text.secondary` when the field is active (focused or filled) or read-only. Disabled → `text.disabled`.
-2. **Error helper must be actionable.** Don't ship `helper = "Helper text"` in production — write what's wrong and how to fix it.
-3. **Affixes go in `prefix` / `suffix`**, never in `value`. Typing `"+91 9876543210"` into value breaks validation and copy/paste.
-4. **Read-only ≠ Disabled.** Use read-only for display values the user can read/copy (Customer ID, policy number). Use disabled only when the field is truly inactive.
-5. **One trailing icon at a time.** Status icons (Error/Success/Warning) take over the trailing slot automatically.
-6. **Title is visible by default.** Hide only when a parent section header already labels the field.
-7. **Heights hug.** Wrap = V padding + line-height. Textarea grows with content. Never pin a fixed height.
-8. **Counter only where it aids.** OTP timers, character limits on textareas. Don't show on short free-text fields.
+1. Intrinsic height — never set `height(...)`. Container height = vertical padding +
+   `bodyLg` line-height. Textarea grows with content.
+2. Title is visible by default. Hide only when a parent section header already labels the
+   field. Placeholder-only disappears the moment the user types.
+3. Error helper must be actionable — explain what's wrong and how to fix it.
+4. Affixes live in `prefix` / `suffix`. Do not concatenate `+91 ` or `₹` into the value.
+5. One trailing icon at a time. Status icons override the caller's choice.
+6. Read-only ≠ Disabled. Read-only keeps content readable and copyable; Disabled dims it.
 
-## Tokens
+## Known gaps vs skill
 
-- Container fill (rest): `surface.base` → readOnly/disabled: `surface.subtle`
-- Border (rest): `stroke.small` + `border.default`
-- Border (focused): `stroke.medium` + `brand.primary`
-- Border (error/success/warning): `stroke.medium` + family primary
-- Border (readOnly): `stroke.small` + `border.subtle`
-- Radius: `radius.medium` (12dp)
-- Padding: `space.lg` horizontal, `space.md` vertical
-- Slot gap: `space.md`
-- Label → container → helper gap: `space.sm`
-- Label: `type.labelMd` · color per state above
-- Value / Prefix / Suffix: `type.bodyLg` · `text.primary` (value) / `text.secondary` (affixes)
-- Placeholder: `type.bodyLg` · `text.disabled`
-- Helper: `type.bodySm` · `text.secondary` / status primary
-- Counter: `type.bodySm` · `text.secondary`
-- Icons: `icon.sm` (20dp)
-- Shadow: `shadow.none`
+- **No orange stroke token for Warning.** The foundation does not have a warning stroke; this
+  component uses `stroke.brandFocus` for the warning border so the status is still signalled
+  via helper colour + trailing warning icon. A `stroke.warningFocus` token is tracked for a
+  future foundation update.
+- **Boxed OTP is not built here.** Skill names this as a separate `WiomOtp` component.

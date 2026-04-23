@@ -1,95 +1,88 @@
-# WiomButton · WiomAcknowledge
+# WiomButton
 
-Primary CTA primitive. 4 types + a checkbox-gated acknowledge row for irreversible actions.
+The approved CTA foundation for the Wiom Android apps. One `WiomButton` composable
+covers five types; [`WiomAcknowledge`](#wiomacknowledge) is a 1st-person consent
+row paired with a Primary CTA for irreversible actions.
 
-## Pick the type
+Source of truth: `.skills-cache/wiom-cta.md`. Token source of truth:
+`foundation/color/WiomColors.kt`.
 
-```
-Is this the main action on the screen?              → Primary
-Is this an alternate/cancel next to a Primary?      → Secondary
-Low-emphasis dismiss or soft action?                → Tertiary
-Deletes, removes, or can't be undone?               → Destructive
-User must confirm they've verified something?       → Acknowledge (then Primary)
-```
+---
+
+## Types
+
+| Type          | Use for                                                    | Fill                 | Label / Icon                 |
+| ------------- | ---------------------------------------------------------- | -------------------- | ---------------------------- |
+| `Primary`     | The one main action per screen                             | `bg.brand`           | `text.onBrand` / `icon.inverse` |
+| `Secondary`   | Alternate prominent action (outlined, brand border)        | transparent          | `text.brand` / `icon.brand`  |
+| `Tertiary`    | Lightweight dismiss / soft action (text-only)              | transparent          | `text.brand` / `icon.brand`  |
+| `Destructive` | Irreversible destruction (delete, cancel plan, remove)     | `bg.critical`        | `text.onCritical` / `icon.inverse` |
+| `PreBooking`  | Customer-app pre-booking flows only                        | `bg.brandAccent`     | `text.onBrandAccent` / `icon.action` |
+
+## States
+
+| State     | Behavior                                                           |
+| --------- | ------------------------------------------------------------------ |
+| Default   | Rest fill. Pressed fill is derived automatically (`InteractionSource`). |
+| Disabled  | `bg.disabled`, `text.disabled`, `icon.disabled`. Non-interactive. |
+| Loading   | Content fades out; a spinner in the matching tint centers in the button. |
+
+Pressed is NOT a parameter — it is driven by `InteractionSource.collectIsPressedAsState()`.
+Hover is not a Wiom state (touch-first). Focus is surfaced externally via the
+`stroke.brandFocus` / `stroke.criticalFocus` ring, not as a fill variant.
 
 ## API
 
 ```kotlin
-WiomButton(
-    text = "भुगतान करें",
-    onClick = { pay() },
-    type = WiomButtonType.Primary,    // Primary | Secondary | Tertiary | Destructive
-    enabled = true,
-    loading = false,
-    icon = null,                       // or WiomButtonIcon.Leading(WiomIcons.phone) / .Trailing(...)
+@Composable
+fun WiomButton(
+    text: String,
+    type: WiomButtonType,
+    modifier: Modifier = Modifier,
+    state: WiomButtonState = WiomButtonState.Default,
+    leadingIcon: ImageVector? = null,
+    trailingIcon: ImageVector? = null,
+    onClick: () -> Unit = {},
 )
 
-// Acknowledge flow
-var ack by remember { mutableStateOf(false) }
-WiomAcknowledge(
-    text = "मैंने सभी जानकारी सही दी है",
-    checked = ack,
-    onCheckedChange = { ack = it },
-)
-WiomButton(
-    text = "Submit",
-    onClick = { submit() },
-    type = WiomButtonType.Primary,
-    enabled = ack,                     // Primary disabled until acknowledge is checked
+@Composable
+fun WiomAcknowledge(
+    text: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 )
 ```
 
 ## Wiom use cases
 
-- **Primary** — "भुगतान करें" (Pay), "Recharge Now", "Verify OTP"
-- **Secondary** — "Cancel", "वापस जाएं", "Review"
-- **Tertiary** — "ठीक है" (OK), "Maybe Later", "Skip"
-- **Destructive** — "Delete plan", "Remove account", "Cancel subscription"
-- **Acknowledge + Primary pair** — "मैंने Terms & Conditions पढ़ लिए हैं" + "Submit"
-
-## Pairing rules (2 CTAs)
-
-| Pair | Layout | Example |
-|---|---|---|
-| Secondary + Primary | side-by-side (right = primary) | "Cancel"  "Confirm" |
-| Primary + Tertiary | vertical stack (top = primary) | "Recharge now" / "Maybe later" |
-| Secondary + Secondary (short text) | side-by-side | Equal-weight choices |
-| Secondary + Secondary (long text) | vertical stack | When shortening loses context |
-| Secondary + Destructive | side-by-side (right = destructive) | "Cancel"  "Delete" |
-| Acknowledge + Primary | vertical, Acknowledge on top | Irreversible flows |
-
-**Never:** Primary + Primary · Destructive alone · 3+ buttons at one level · Tertiary side-by-side with Primary.
+- **Sticky-bottom CTA**: `Primary` pinned above the nav bar for the reason-for-being
+  action (Recharge, Submit, Pay).
+- **Side-by-side pair**: `Secondary + Primary` (cancel/confirm) inside a bottom sheet.
+- **Stacked pair**: `Primary + Tertiary` (pay now / maybe later) on a soft-dismiss sheet.
+- **Destructive pair**: `Secondary + Destructive` — never pair Primary + Destructive.
+- **Pre-booking**: Customer-app pre-booking flows only, never for generic Buy / Pay.
+- **Acknowledge + Primary**: 1st-person verification before irreversible actions
+  ("मैंने सभी जानकारी सही दी है"). Paired Primary stays `Disabled` until `checked`.
 
 ## Rules
 
-1. **Max 2 CTAs per screen/sheet/dialog.**
-2. **Primary appears only once** per screen.
-3. **Right / top = preferred action.**
-4. **Destructive never alone** — always paired with a Secondary escape route.
-5. **Copy reflects the next screen's context.** "भुगतान करें" not "आगे बढ़ें".
-6. **Acknowledge uses 1st person.** "मैंने..." / "I have..." — never "कस्टमर ने...".
-7. **Text never wraps, truncates, or shrinks.** Rewrite shorter copy. No ellipsis. No font-size hack.
-8. **Minimum 48dp tall** (via `defaultMinSize`) — grows with font scale. Never pin a fixed height.
-9. **No shadow on the button.** Flat.
-10. **Loading hides text and icon**, shows a spinner in the text color.
+1. Max 1 Primary and 1 Destructive per screen.
+2. Never Destructive for Skip / Cancel / Close / No thanks — those are Secondary/Tertiary.
+3. Right = preferred in side-by-side. Top = preferred in stacked.
+4. Tertiary never side-by-side with Primary.
+5. CTA copy reflects the destination ("Recharge", not "Continue").
+6. Never wrap / truncate / shrink CTA text — rewrite shorter.
+7. No `Modifier.height(...)`. Width via `.weight(1f)` (Row) or `.fillMaxWidth()` (Column).
+8. Icons from `Icons.Rounded.*` only — never `Icons.Default/Filled/Outlined/Sharp`.
+9. Acknowledge copy is 1st-person ("मैंने…" / "I've…"), never pre-checked.
 
 ## Tokens
 
-- Min height: 48dp (via `defaultMinSize` — grows with font scale)
-- Padding: `space.lg` H (16dp) · `space.md` V (12dp)
-- Radius: `radius.large` (16dp)
-- Typography: `type.labelLg` (16sp SemiBold)
-- Icon size: 20dp · icon-text gap: `space.sm` (8dp)
-- Secondary border: `stroke.medium` (2dp)
-- Side-by-side CTA gap: `space.md` (12dp)
-- Stacked CTA gap: `space.sm` (8dp)
-- Shadow: `shadow.none` always
-
-### Color per type × state
-
-| Type | Default fill / text | Pressed | Disabled |
-|---|---|---|---|
-| Primary | `brand.primary` / `text.onColor` | `brand.primaryPressed` | `surface.muted` / `text.disabled` |
-| Secondary | transparent / `brand.primary` + 2dp border | `brand.primarySubtle` fill | transparent / `text.disabled` + `border.default` |
-| Tertiary | transparent / `brand.primary` | `brand.primarySubtle` fill | transparent / `text.disabled` |
-| Destructive | `negative.primary` / `text.onColor` | `negative.primaryPressed` | `surface.muted` / `text.disabled` |
+- Radius: `radius.large` (16 dp)
+- Padding: `spacing.lg` (16 dp) horizontal, `spacing.md` (12 dp) vertical
+- Label: `type.labelLg` (16 sp SemiBold)
+- Icon size: `iconSize.sm` (20 dp)
+- Icon ↔ label gap: `spacing.sm` (8 dp)
+- Shadow: none (flat; sticky bars use `stroke.small + stroke.subtle` border-top instead)

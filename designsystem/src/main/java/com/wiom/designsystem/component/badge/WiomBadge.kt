@@ -3,176 +3,313 @@ package com.wiom.designsystem.component.badge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.wiom.designsystem.theme.WiomTheme
 
-enum class WiomBadgeColor { Brand, Positive, Warning, Negative, Info, Neutral }
-enum class WiomBadgeSize { Default, Small }
-enum class WiomBadgeStyle { Filled, Tinted }
+// -----------------------------------------------------------------------------
+// Dot
+// -----------------------------------------------------------------------------
+
+/** Tone for [WiomBadgeDot]. */
+enum class WiomBadgeDotTone { Brand, Critical, Neutral }
 
 /**
- * Dot badge — 8dp filled circle. Overlay only; position absolutely top-end on an icon/avatar.
- * Allowed colors: Brand, Negative, Neutral.
+ * 8 dp filled dot for unread / active indicators with no number or text.
+ *
+ * Overlay-only — position via `Modifier.align(Alignment.TopEnd)` on top of an
+ * icon or avatar. Never inline as a standalone status indicator.
  */
 @Composable
 fun WiomBadgeDot(
+    tone: WiomBadgeDotTone,
     modifier: Modifier = Modifier,
-    color: WiomBadgeColor = WiomBadgeColor.Negative,
 ) {
+    val fill = when (tone) {
+        WiomBadgeDotTone.Brand -> WiomTheme.color.bg.brand
+        WiomBadgeDotTone.Critical -> WiomTheme.color.bg.critical
+        WiomBadgeDotTone.Neutral -> WiomTheme.color.bg.muted
+    }
     Box(
         modifier = modifier
             .size(8.dp)
-            .background(dotFill(color), RoundedCornerShape(WiomTheme.radius.full))
+            .clip(CircleShape)
+            .background(color = fill, shape = CircleShape),
     )
 }
 
+// -----------------------------------------------------------------------------
+// Count
+// -----------------------------------------------------------------------------
+
+/** Tone for [WiomBadgeCount]. Count is always loud — Brand or Critical. */
+enum class WiomBadgeCountTone { Brand, Critical }
+
 /**
- * Count badge — numeric indicator. Hides when [count] <= 0.
- * Caps at "9+" if [maxOneDigit] else "99+". Allowed colors: Brand, Negative.
+ * Numeric count badge.
+ *
+ * - Hidden at `count <= 0` (renders nothing). Never shows "0".
+ * - Caps display per [cap] (default 9 → "9+"; pass 99 for two-digit caps).
+ * - `type.metaXs` (10 sp) — one of the few places sub-14sp is allowed (skill
+ *   allowance for badge counts).
+ *
+ * Typical use: notification bell overlay. Position with `Modifier.align(Alignment.TopEnd)`
+ * inside a parent `Box`.
  */
 @Composable
 fun WiomBadgeCount(
     count: Int,
+    tone: WiomBadgeCountTone,
     modifier: Modifier = Modifier,
-    color: WiomBadgeColor = WiomBadgeColor.Negative,
-    maxOneDigit: Boolean = true,
+    cap: Int = 9,
 ) {
     if (count <= 0) return
-    val display = when {
-        maxOneDigit && count > 9 -> "9+"
-        !maxOneDigit && count > 99 -> "99+"
-        else -> count.toString()
+    val label = if (count > cap) "$cap+" else count.toString()
+    val fill = when (tone) {
+        WiomBadgeCountTone.Brand -> WiomTheme.color.bg.brand
+        WiomBadgeCountTone.Critical -> WiomTheme.color.bg.critical
     }
+    val textColor = when (tone) {
+        WiomBadgeCountTone.Brand -> WiomTheme.color.text.onBrand
+        WiomBadgeCountTone.Critical -> WiomTheme.color.text.onCritical
+    }
+    val shape = RoundedCornerShape(WiomTheme.radius.full)
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = 18.dp, minHeight = 18.dp)
-            .background(countFill(color), RoundedCornerShape(WiomTheme.radius.full))
-            .padding(horizontal = 5.dp),
+            .clip(shape)
+            .background(color = fill, shape = shape)
+            .padding(horizontal = WiomTheme.spacing.xs),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = display,
+            text = label,
             style = WiomTheme.type.metaXs,
-            color = WiomTheme.colors.text.onColor,
-            textAlign = TextAlign.Center,
+            color = textColor,
+            maxLines = 1,
         )
     }
 }
 
+// -----------------------------------------------------------------------------
+// Label
+// -----------------------------------------------------------------------------
+
+/** Size of a [WiomBadgeLabel]. Small is ALWAYS Tinted — no Filled small exists. */
+enum class WiomBadgeLabelSize { Default, Small }
+
 /**
- * Label badge — text status.
- * Size: Default (28dp, type.label.md) or Small (24dp, type.label.sm).
- * Style: Filled (terminal states, Default only) or Tinted (transitional).
+ * Style of a [WiomBadgeLabel].
+ *
+ * - `Filled` — terminal state that won't change (completed, failed, expired).
+ *   Available only on `Default` size.
+ * - `Tinted` — transitional state (processing, pending, active). Available on
+ *   both sizes. The ONLY style for `Small` size.
+ */
+enum class WiomBadgeLabelStyle { Filled, Tinted }
+
+/**
+ * Tone of a [WiomBadgeLabel]. `Brand` is only valid on `Tinted` style.
+ */
+enum class WiomBadgeLabelTone {
+    Positive, Warning, Critical, Info, Neutral, Brand,
+}
+
+/**
+ * Text status / state / label chip. Passive — never tappable.
+ *
+ * ```
+ * WiomBadgeLabel(
+ *     text = "असफल",
+ *     size = WiomBadgeLabelSize.Default,
+ *     tone = WiomBadgeLabelTone.Critical,
+ *     style = WiomBadgeLabelStyle.Filled,
+ * )
+ * ```
+ *
+ * Rules:
+ * - Small size is ALWAYS Tinted — passing [WiomBadgeLabelStyle.Filled] with
+ *   [WiomBadgeLabelSize.Small] silently falls back to Tinted.
+ * - Single line only. Rewrite shorter if the text overflows.
+ * - Brand tone exists on Tinted only; Filled + Brand falls back to Brand + Tinted.
+ * - Warning filled uses the gold `bg.warning` — the one family where the on-surface
+ *   label is DARK (`text.onWarning` olive) because white on gold fails AA.
+ *
+ * @param text Status text. Never generic ("Status"/"State") — use specific copy.
+ * @param tone Color family. See [WiomBadgeLabelTone].
+ * @param modifier Modifier.
+ * @param size Default (28 dp) or Small (24 dp).
+ * @param style Filled (terminal) or Tinted (transitional). Ignored when [size] is Small.
  */
 @Composable
 fun WiomBadgeLabel(
     text: String,
+    tone: WiomBadgeLabelTone,
     modifier: Modifier = Modifier,
-    size: WiomBadgeSize = WiomBadgeSize.Default,
-    color: WiomBadgeColor = WiomBadgeColor.Neutral,
-    style: WiomBadgeStyle = WiomBadgeStyle.Tinted,
+    size: WiomBadgeLabelSize = WiomBadgeLabelSize.Default,
+    style: WiomBadgeLabelStyle = WiomBadgeLabelStyle.Tinted,
 ) {
-    val actualStyle = if (size == WiomBadgeSize.Small) WiomBadgeStyle.Tinted else style
-    val (fill, textColor) = labelColors(color, actualStyle)
-    val typo = when (size) {
-        WiomBadgeSize.Default -> WiomTheme.type.labelMd
-        WiomBadgeSize.Small -> WiomTheme.type.labelSm
+    // Small is always Tinted per skill Rule 3 + foundations: no Filled Small variant exists.
+    val effectiveStyle = if (size == WiomBadgeLabelSize.Small) WiomBadgeLabelStyle.Tinted else style
+
+    val palette = labelPalette(tone = tone, style = effectiveStyle)
+    val shape = RoundedCornerShape(WiomTheme.radius.tiny)
+
+    val horizontal = when (size) {
+        WiomBadgeLabelSize.Default -> WiomTheme.spacing.md   // 12dp
+        WiomBadgeLabelSize.Small -> WiomTheme.spacing.sm      // 8dp
     }
-    val hPad = when (size) {
-        WiomBadgeSize.Default -> WiomTheme.spacing.md
-        WiomBadgeSize.Small -> WiomTheme.spacing.sm
+    val vertical = WiomTheme.spacing.xs                       // 4dp
+
+    val textStyle = when (size) {
+        WiomBadgeLabelSize.Default -> WiomTheme.type.labelMd  // 14 sp SemiBold / 20 LH → 28 dp total
+        WiomBadgeLabelSize.Small -> WiomTheme.type.labelSm    // 12 sp SemiBold / 16 LH → 24 dp total
     }
-    Row(
+
+    Box(
         modifier = modifier
-            .background(fill, RoundedCornerShape(WiomTheme.radius.tiny))
-            .padding(horizontal = hPad, vertical = WiomTheme.spacing.xs),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+            .clip(shape)
+            .background(color = palette.fill, shape = shape)
+            .padding(horizontal = horizontal, vertical = vertical),
     ) {
-        Text(text = text, style = typo, color = textColor, maxLines = 1)
+        Text(
+            text = text,
+            style = textStyle,
+            color = palette.text,
+            maxLines = 1,
+        )
     }
 }
 
-@Composable
-private fun dotFill(color: WiomBadgeColor): Color = when (color) {
-    WiomBadgeColor.Brand -> WiomTheme.colors.brand.primary
-    WiomBadgeColor.Negative -> WiomTheme.colors.negative.primary
-    WiomBadgeColor.Neutral -> WiomTheme.colors.surface.muted
-    else -> WiomTheme.colors.negative.primary
-}
+// ---- internals --------------------------------------------------------------
+
+private data class LabelPalette(val fill: Color, val text: Color)
 
 @Composable
-private fun countFill(color: WiomBadgeColor): Color = when (color) {
-    WiomBadgeColor.Brand -> WiomTheme.colors.brand.primary
-    else -> WiomTheme.colors.negative.primary
-}
-
-@Composable
-private fun labelColors(
-    color: WiomBadgeColor,
-    style: WiomBadgeStyle,
-): Pair<Color, Color> {
-    val c = WiomTheme.colors
+private fun labelPalette(tone: WiomBadgeLabelTone, style: WiomBadgeLabelStyle): LabelPalette {
+    val c = WiomTheme.color
     return when (style) {
-        WiomBadgeStyle.Filled -> when (color) {
-            WiomBadgeColor.Positive -> c.positive.primary to c.text.onColor
-            WiomBadgeColor.Warning -> c.warning.primary to c.text.onColor
-            WiomBadgeColor.Negative -> c.negative.primary to c.text.onColor
-            WiomBadgeColor.Info -> c.info.primary to c.text.onColor
-            WiomBadgeColor.Neutral -> c.surface.muted to c.text.secondary
-            WiomBadgeColor.Brand -> c.brand.primary to c.text.onColor
+        WiomBadgeLabelStyle.Filled -> when (tone) {
+            WiomBadgeLabelTone.Positive -> LabelPalette(c.bg.positive, c.text.onPositive)
+            WiomBadgeLabelTone.Warning -> LabelPalette(c.bg.warning, c.text.onWarning)
+            WiomBadgeLabelTone.Critical -> LabelPalette(c.bg.critical, c.text.onCritical)
+            WiomBadgeLabelTone.Info -> LabelPalette(c.bg.info, c.text.inverse)
+            WiomBadgeLabelTone.Neutral -> LabelPalette(c.bg.muted, c.text.subtle)
+            // Brand is a Tinted-only tone per skill. Fall back to Brand + Tinted.
+            WiomBadgeLabelTone.Brand -> LabelPalette(c.bg.brandSubtle, c.text.brand)
         }
-        WiomBadgeStyle.Tinted -> when (color) {
-            WiomBadgeColor.Positive -> c.positive.tint to c.positive.primary
-            WiomBadgeColor.Warning -> c.warning.subtle to c.warning.primary
-            WiomBadgeColor.Negative -> c.negative.tint to c.negative.primary
-            WiomBadgeColor.Info -> c.info.tint to c.info.primary
-            WiomBadgeColor.Neutral -> c.surface.subtle to c.text.secondary
-            WiomBadgeColor.Brand -> c.brand.primaryTint to c.brand.primary
+        WiomBadgeLabelStyle.Tinted -> when (tone) {
+            WiomBadgeLabelTone.Positive -> LabelPalette(c.bg.positiveSubtle, c.text.positive)
+            WiomBadgeLabelTone.Warning -> LabelPalette(c.bg.warningSubtle, c.text.onWarning)
+            WiomBadgeLabelTone.Critical -> LabelPalette(c.bg.criticalSubtle, c.text.critical)
+            WiomBadgeLabelTone.Info -> LabelPalette(c.bg.infoSubtle, c.text.info)
+            WiomBadgeLabelTone.Neutral -> LabelPalette(c.bg.subtle, c.text.subtle)
+            WiomBadgeLabelTone.Brand -> LabelPalette(c.bg.brandSubtle, c.text.brand)
         }
     }
 }
 
-@Preview(showBackground = true)
+// -----------------------------------------------------------------------------
+// Previews
+// -----------------------------------------------------------------------------
+
+@Preview(name = "Dot — tones", showBackground = true, backgroundColor = 0xFFFAF9FC)
 @Composable
-private fun BadgeDotPreview() = WiomTheme {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        WiomBadgeDot(color = WiomBadgeColor.Brand)
-        WiomBadgeDot(color = WiomBadgeColor.Negative)
-        WiomBadgeDot(color = WiomBadgeColor.Neutral)
+private fun PreviewBadgeDots() {
+    WiomTheme {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
+        ) {
+            WiomBadgeDot(WiomBadgeDotTone.Brand)
+            WiomBadgeDot(WiomBadgeDotTone.Critical)
+            WiomBadgeDot(WiomBadgeDotTone.Neutral)
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Count — Brand / Critical / overflow / zero", showBackground = true, backgroundColor = 0xFFFAF9FC)
 @Composable
-private fun BadgeCountPreview() = WiomTheme {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        WiomBadgeCount(count = 1)
-        WiomBadgeCount(count = 5, color = WiomBadgeColor.Brand)
-        WiomBadgeCount(count = 15)
-        WiomBadgeCount(count = 100, maxOneDigit = false)
+private fun PreviewBadgeCount() {
+    WiomTheme {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
+        ) {
+            WiomBadgeCount(count = 3, tone = WiomBadgeCountTone.Brand)
+            WiomBadgeCount(count = 5, tone = WiomBadgeCountTone.Critical)
+            WiomBadgeCount(count = 42, tone = WiomBadgeCountTone.Critical, cap = 9)
+            WiomBadgeCount(count = 125, tone = WiomBadgeCountTone.Critical, cap = 99)
+            WiomBadgeCount(count = 0, tone = WiomBadgeCountTone.Critical) // renders nothing
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Label — Default Filled", showBackground = true, backgroundColor = 0xFFFAF9FC)
 @Composable
-private fun BadgeLabelPreview() = WiomTheme {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        WiomBadgeLabel("Confirmed", color = WiomBadgeColor.Positive, style = WiomBadgeStyle.Filled)
-        WiomBadgeLabel("Pending", color = WiomBadgeColor.Warning, style = WiomBadgeStyle.Tinted)
-        WiomBadgeLabel("Failed", color = WiomBadgeColor.Negative, style = WiomBadgeStyle.Filled)
-        WiomBadgeLabel("पक्का", size = WiomBadgeSize.Small, color = WiomBadgeColor.Positive)
+private fun PreviewBadgeLabelDefaultFilled() {
+    WiomTheme {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
+        ) {
+            WiomBadgeLabel("पूरा हुआ", tone = WiomBadgeLabelTone.Positive, style = WiomBadgeLabelStyle.Filled)
+            WiomBadgeLabel("रुका हुआ", tone = WiomBadgeLabelTone.Warning, style = WiomBadgeLabelStyle.Filled)
+            WiomBadgeLabel("असफल", tone = WiomBadgeLabelTone.Critical, style = WiomBadgeLabelStyle.Filled)
+            WiomBadgeLabel("चालू", tone = WiomBadgeLabelTone.Info, style = WiomBadgeLabelStyle.Filled)
+            WiomBadgeLabel("बाकी", tone = WiomBadgeLabelTone.Neutral, style = WiomBadgeLabelStyle.Filled)
+        }
+    }
+}
+
+@Preview(name = "Label — Default Tinted", showBackground = true, backgroundColor = 0xFFFAF9FC)
+@Composable
+private fun PreviewBadgeLabelDefaultTinted() {
+    WiomTheme {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
+        ) {
+            WiomBadgeLabel("पक्का", tone = WiomBadgeLabelTone.Positive, style = WiomBadgeLabelStyle.Tinted)
+            WiomBadgeLabel("अपडेट", tone = WiomBadgeLabelTone.Warning, style = WiomBadgeLabelStyle.Tinted)
+            WiomBadgeLabel("समय खत्म", tone = WiomBadgeLabelTone.Critical, style = WiomBadgeLabelStyle.Tinted)
+            WiomBadgeLabel("प्रोसेसिंग", tone = WiomBadgeLabelTone.Info, style = WiomBadgeLabelStyle.Tinted)
+            WiomBadgeLabel("प्रस्तावित", tone = WiomBadgeLabelTone.Neutral, style = WiomBadgeLabelStyle.Tinted)
+            WiomBadgeLabel("फ़ीचर्ड", tone = WiomBadgeLabelTone.Brand, style = WiomBadgeLabelStyle.Tinted)
+        }
+    }
+}
+
+@Preview(name = "Label — Small (always Tinted)", showBackground = true, backgroundColor = 0xFFFAF9FC)
+@Composable
+private fun PreviewBadgeLabelSmall() {
+    WiomTheme {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm)) {
+                WiomBadgeLabel("पक्का", tone = WiomBadgeLabelTone.Positive, size = WiomBadgeLabelSize.Small)
+                WiomBadgeLabel("पेंडिंग", tone = WiomBadgeLabelTone.Warning, size = WiomBadgeLabelSize.Small)
+                WiomBadgeLabel("एक्सपायर्ड", tone = WiomBadgeLabelTone.Critical, size = WiomBadgeLabelSize.Small)
+                WiomBadgeLabel("एडमिन", tone = WiomBadgeLabelTone.Info, size = WiomBadgeLabelSize.Small)
+                WiomBadgeLabel("न्यूट्रल", tone = WiomBadgeLabelTone.Neutral, size = WiomBadgeLabelSize.Small)
+                WiomBadgeLabel("ब्रांड", tone = WiomBadgeLabelTone.Brand, size = WiomBadgeLabelSize.Small)
+            }
+        }
     }
 }

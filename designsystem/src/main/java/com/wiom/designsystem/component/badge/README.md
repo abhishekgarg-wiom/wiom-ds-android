@@ -1,66 +1,118 @@
 # WiomBadge
 
-Passive status indicator. Never tappable. Three types: Dot, Count, Label.
+Passive status / indicator / count chips. Never tappable — if it needs a tap
+target, it's a Chip, not a badge.
 
-## When to use which
+Source of truth: `.skills-cache/wiom-badge.md`. Distinct from
+[`WiomIconBadge`](../iconbadge/README.md) — Icon Badge is a glyph-in-circle
+affordance (no text). This file covers the three text/count badge variants:
+Dot · Count · Label.
 
-| Need | Component |
-|---|---|
-| "Something new" / unread dot — no number or text | `WiomBadgeDot` |
-| Numeric count (notifications, unread items) | `WiomBadgeCount` |
-| Text status / state / role ("असफल", "पक्का", "एडमिन") | `WiomBadgeLabel` |
+---
 
-## Sizing (Label only)
+## Variants
 
-- **Default (28dp)** — badge IS the information. Use `Filled` for terminal states, `Tinted` for transitional.
-- **Small (24dp)** — badge supports other content. Always `Tinted` (the enum ignores `Filled` for Small).
+### `WiomBadgeDot(tone)`
+8 dp filled circle — unread / active indicator with no text or number.
+Overlay-only — position on top of an icon or avatar with
+`Modifier.align(Alignment.TopEnd)` inside a parent `Box`.
 
-Test: remove the badge — does the row still make sense? If yes, use `Small`; if no, use `Default`.
+Tones: `Brand` · `Critical` · `Neutral`.
 
-## Style — Filled vs Tinted
+### `WiomBadgeCount(count, tone, cap = 9)`
+Numeric badge. Hidden at `count <= 0`. Caps at `"$cap+"` (default `9+`).
+Uses `type.metaXs` (10 sp) — one of the allowed sub-14sp exceptions.
 
-- **Filled** (loud, high contrast): terminal, won't change. "पूरा हुआ", "असफल", "Confirmed".
-- **Tinted** (soft, low contrast): transitional, may change. "प्रोसेसिंग", "Active", "पक्का".
+Tones: `Brand` · `Critical`.
+
+### `WiomBadgeLabel(text, tone, size, style)`
+Text status chip. Two sizes, two styles.
+
+| Size     | Height | Style constraint         | Typography  |
+| -------- | ------ | ------------------------ | ----------- |
+| Default  | 28 dp  | Filled OR Tinted          | `labelMd`   |
+| Small    | 24 dp  | **Tinted only** (Filled falls back) | `labelSm`   |
+
+Tones: `Positive` · `Warning` · `Critical` · `Info` · `Neutral` · `Brand`
+(Brand is Tinted-only).
+
+## Decision tree
+
+```
+Just "something new / unread" with NO number/text?         → WiomBadgeDot
+Numeric count of notifications / unread items?              → WiomBadgeCount
+Text status / state / role label?                           → WiomBadgeLabel
+  Does the row still work if the badge is removed?
+    YES  → Small (supplementary context)
+    NO   → Default (badge IS the information)
+  Is this state final / terminal?
+    YES  → Filled (available on Default only)
+    NO   → Tinted (transitional)
+  What does the status represent?
+    Success/confirmed/complete   → Positive
+    Attention/pending/expiring   → Warning
+    Failed/expired/revoked       → Critical
+    Active/in-progress/info      → Info
+    Default/proposed/inactive    → Neutral
+    Featured/brand-flagged       → Brand (Tinted only)
+```
 
 ## API
 
 ```kotlin
-WiomBadgeDot(color = WiomBadgeColor.Negative)
+@Composable
+fun WiomBadgeDot(tone: WiomBadgeDotTone, modifier: Modifier = Modifier)
 
-WiomBadgeCount(count = 5, color = WiomBadgeColor.Negative)
-// count <= 0 → nothing rendered (hide at zero rule)
-// count > 9 → "9+" by default; pass maxOneDigit = false for "99+"
+@Composable
+fun WiomBadgeCount(
+    count: Int,
+    tone: WiomBadgeCountTone,
+    modifier: Modifier = Modifier,
+    cap: Int = 9,
+)
 
-WiomBadgeLabel(
-    text = "असफल",
-    size = WiomBadgeSize.Default,
-    color = WiomBadgeColor.Negative,
-    style = WiomBadgeStyle.Filled,
+@Composable
+fun WiomBadgeLabel(
+    text: String,
+    tone: WiomBadgeLabelTone,
+    modifier: Modifier = Modifier,
+    size: WiomBadgeLabelSize = WiomBadgeLabelSize.Default,
+    style: WiomBadgeLabelStyle = WiomBadgeLabelStyle.Tinted,
 )
 ```
 
 ## Wiom use cases
 
-- **Transaction row (Default + Filled + Negative):** `निकासी — ₹2,000 → SBI  [असफल]` — user is checking the outcome.
-- **Wallet inline (Small + Tinted + Positive):** `₹8,200  [पक्का]` — amount is primary, badge confirms certainty.
-- **Header role (Small + Tinted + Info):** `Rajesh  [एडमिन]` — name is primary, role supports.
-- **Bell with count (Count + Negative, overlayed via `Box` + `Alignment.TopEnd`):** shows unread notifications.
-- **Plan status (Default + Tinted + Info):** `[प्रोसेसिंग]` during an activation flow.
+- **Dot** — red dot on the notification bell, brand dot on a newly available
+  plan tile, neutral dot on draft rows.
+- **Count** — unread count on the bell, tab count ("टिकट `5`").
+- **Label Default Filled** — transaction outcome ("असफल"), slot state ("Confirmed"),
+  device state ("Deployed").
+- **Label Default Tinted** — provisional status ("प्रोसेसिंग"), pending state.
+- **Label Small** — inline confirmations ("₹8,200 पक्का"), role tags ("Rajesh एडमिन"),
+  tab secondary context.
 
 ## Rules
 
-1. **Passive only.** If it needs a tap target, it's a Chip, not a badge.
-2. **No icons in badges.** Color + text is enough.
-3. **Small = Tinted only.** The composable enforces this.
-4. **Count overflow.** Default: `9+`. Set `maxOneDigit = false` for `99+`.
-5. **Hide at zero.** Count badge with `count <= 0` renders nothing.
-6. **One badge per row.** Don't stack badges on the same line.
-7. **Color matches status family.** Positive badge never sits on a Negative row.
+1. Badges are passive — never tappable.
+2. No icons in badges — color + text is sufficient.
+3. Small = Tinted only. Filled-small is silently downgraded to Tinted.
+4. Hide count at 0. Never show "0".
+5. Cap count overflow — "9+" or "99+", never raw large numbers.
+6. One badge per row. Don't stack multiple badges on a line item.
+7. Color matches status family. Don't mix (no green badge on a red card).
+8. Dot is overlay-only — never inline.
+9. Label text never wraps — single line.
+10. No generic text ("Status", "State") — use specific Hindi/English copy.
 
 ## Tokens
 
-- Dot: 8dp · `radius.full` · family primary
-- Count: min 18dp · `radius.full` · `type.metaXs` · `text.onColor` on family primary
-- Label (Default): 28dp height (from 4+20+4 padding) · `radius.tiny` · `type.labelMd` · `space.md` horizontal padding
-- Label (Small): 24dp height (from 4+16+4) · `radius.tiny` · `type.labelSm` · `space.sm` horizontal padding
-- Shadow: `shadow.none` always
+- Dot fill: `bg.brand` · `bg.critical` · `bg.muted`
+- Count fill: `bg.brand` / `bg.critical` · label `text.onBrand` / `text.onCritical`
+- Count typography: `type.metaXs` (10 sp Regular)
+- Label Default typography: `type.labelMd` (14 sp SemiBold)
+- Label Small typography: `type.labelSm` (12 sp SemiBold)
+- Label radius: `radius.tiny` (4 dp)
+- Label padding: `spacing.md` H / `spacing.xs` V (Default) · `spacing.sm` H / `spacing.xs` V (Small)
+- Dot + Count radius: `radius.full`
+- Warning-family label text: `text.onWarning` (#372902 olive) — dark on gold for AA

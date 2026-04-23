@@ -1,73 +1,80 @@
 # WiomTopBar
 
-Header at the top of every screen. Covers 3 sizes × 4 states in one component.
+Screen header. One component covers every top-of-screen chrome via **Size × State**.
 
-## Size — pick based on visual weight
+## Variants
 
-| Size | Height | Use |
+| Size | Height | When |
 |---|---|---|
-| **Small** (default) | 64dp | 90% of screens. Detail, settings, forms, modals. If unsure, use Small. |
-| **Medium** | 112dp | Content-heavy screens needing a prominent title. "Payment history", "All invoices". ~10% of screens. |
-| **Large** | 152dp | Hero/landing only. Home tab root, dashboard greeting, profile root. **One per flow.** |
+| `Small` | 64dp | Default for ~90% of screens — detail, settings, forms, modals (with `Centered`), search. |
+| `Medium` | 112dp | Content-heavy screens where the title deserves weight (`Payment history`, `All invoices`). |
+| `Large` | 152dp | Hero / landing surfaces only — one per flow (home root, dashboard greeting). |
 
-## States
-
-- **Default** — standard header
-- **Centered** — `centered = true`. Modal / bottom-sheet headers only (Small only). Title is truly centered.
-- **Scrolled** — `scrolled = true`. Set programmatically when scroll offset > 0. Adds `shadow.sm`.
-- **Search** — not a state here; compose `WiomInput` with leading icon yourself when search mode is active.
+| State | Where | Notes |
+|---|---|---|
+| `Default` | Small · Medium · Large | Standard header. |
+| `Centered` | Small only | Modal / bottom-sheet headers. Max 1 trailing action. |
+| `Scrolled` | Small · Medium · Large | Programmatic — apply when scroll offset > 0. Adds `shadow.sm`. |
+| `Search` | Small only | Search pill replaces the title. |
 
 ## API
 
 ```kotlin
-// Most common: secondary screen
 WiomTopBar(
     title = "Profile",
+    size = WiomTopBarSize.Small,
+    state = WiomTopBarState.Default,
+    subtitle = null,
+    leading = { WiomTopBarIconAction(Icons.Rounded.ArrowBack, onClick = { ... }) },
     actions = {
-        WiomTopBarIconAction(icon = { WiomIcon(WiomIcons.search, "Search") }, onClick = onSearch)
+        WiomTopBarIconAction(Icons.Rounded.Search, onClick = { ... })
+        WiomTopBarIconAction(Icons.Rounded.MoreVert, onClick = { ... })
     },
 )
-
-// Modal with Save CTA
-WiomTopBar(
-    title = "Edit profile",
-    centered = true,
-    leading = { WiomIcon(WiomIcons.close, "Close") },
-    actions = { WiomTopBarTextAction(text = "Save", onClick = onSave) },
-)
-
-// Home / root (no back)
-WiomTopBar(
-    title = "Wiom",
-    leading = null,
-    actions = {
-        WiomTopBarIconAction(icon = { WiomIcon(WiomIcons.search, "Search") }, onClick = onSearch)
-        WiomTopBarIconAction(icon = { WiomIcon(WiomIcons.moreVert, "More") }, onClick = onMore)
-    },
-)
-
-// Hero landing
-WiomTopBar(title = "Good morning,\nAbhishek", size = WiomTopBarSize.Large)
 ```
+
+Helpers:
+- `WiomTopBarIconAction(icon, onClick, contentDescription)` — 48dp touch target, `icon.action` tint.
+- `WiomTopBarTextAction(text, onClick)` — 48dp min-height, `type.labelMd` · `text.brand`.
+
+## Wiom use cases
+
+- **Secondary screen:** Small · Default · `ArrowBack` leading + 1–3 icon actions.
+- **Modal / sheet header:** Small · Centered · `Close` leading + optional text CTA (Save / Done).
+- **List root (major):** Medium · Default — e.g. "Payment history".
+- **Home tab:** Large · Default · `Menu` leading (no back on root).
+- **On scroll:** switch `state = Scrolled` when offset > 0. Ship `Default` at rest.
+- **Search active:** Small · Search — back arrow exits, pill replaces title, optional "Cancel" text action.
 
 ## Rules
 
-1. **Small by default.** Only go Medium/Large if you can name a specific reason.
-2. **Large: one per flow.** Never on list/form/detail/modal/settings screens.
-3. **Centered for modals only.** Never for full-screen navigation.
-4. **Scrolled is runtime only.** Ship `Default` at rest; flip on scroll > 0.
-5. **Cap trailing actions at 3.** Beyond 3, move to overflow (`moreVert`).
-6. **Text CTA is never destructive.** For delete/cancel-subscription, use an in-screen Button.
-7. **Titles ≤ 24 chars** on 360dp screens — longer truncates with ellipsis.
-8. **Heights hug from padding + line-height** — never pin a fixed height.
+1. `Small` is the default. Only use `Medium` / `Large` with a concrete reason.
+2. Only one `Large` per flow. Never on list / form / detail / modal / settings.
+3. `Centered` is modal-only — never on full-screen nav destinations.
+4. Cap trailing icons at 3. Never stack Text CTA + 3 icons.
+5. `Scrolled` shadow is programmatic, not decorative — don't ship it at rest.
+6. Height is intrinsic — never override with a fixed `height(...)`.
+7. Text CTA is never destructive (use a real Button inside the screen).
+8. Title ≤ 24 chars on 360dp — long titles → move length into the subtitle.
 
 ## Tokens
 
-- Container: `surface.base`
-- Title (Small): `type.titleLg` · `text.primary`
-- Title (Medium): `type.headingLg` · `text.primary`
-- Title (Large): `type.headingXl` · `text.primary`
-- Subtitle: `type.bodySm` · `text.secondary`
-- Text CTA: `type.labelMd` · `brand.primary`
-- Icons: `icon.md` (24dp) · `text.secondary` · 48dp touch target
-- Scrolled elevation: `shadow.sm`
+| Part | Token |
+|---|---|
+| Container fill | `color.bg.default` |
+| Scrolled elevation | `shadow.sm` |
+| Search pill fill | `color.bg.subtle` |
+| Search pill radius | `radius.full` |
+| Search pill placeholder | `type.bodyLg` · `text.disabled` |
+| Title — Small | `type.titleLg` · `text.default` |
+| Title — Medium | `type.headingLg` · `text.default` |
+| Title — Large | `type.headingXl` · `text.default` |
+| Subtitle | `type.bodySm` · `text.subtle` |
+| Text CTA | `type.labelMd` · `text.brand` · 48dp min-height |
+| Icon action | `icon.action` (`Icons.Rounded.*`) · 48dp touch target via `space.md` padding |
+| Medium title padding | `space.sm` top + 32lh + `space.sm` bottom |
+| Large title padding | `space.md` top + 44lh + `space.xxl` bottom |
+| Small vertical padding | `space.sm` |
+| Small outer horizontal padding | `space.xs` (→ 16dp from glyph edge) |
+
+All heights hug from padding + line-height — nothing is pinned.

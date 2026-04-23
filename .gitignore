@@ -26,3 +26,4 @@ Thumbs.db
 
 # Local skill cache used during v0.1.0 component build
 .skills-cache/
+prompts/

@@ -1,35 +1,37 @@
 package com.wiom.designsystem.foundation.icon
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import com.wiom.designsystem.theme.WiomTheme
 
 /**
- * Wiom icon composable.
+ * Wiom icon — Material 3 Icons Rounded wrapper.
  *
- * Always provide a non-null [contentDescription] when the icon is actionable or conveys info.
- * Pass `null` only for purely decorative icons adjacent to a text label.
+ * Usage:
+ * ```
+ * WiomIcon(Icons.Rounded.Search, contentDescription = "Search")
+ * WiomIcon(Icons.Rounded.Phone, contentDescription = null, tint = WiomTheme.color.icon.brand)
+ * ```
  *
- * Size defaults to [WiomTheme.icon.md] (24dp). Override with [WiomTheme.icon] tokens only —
- * never hardcode dp values.
+ * Size defaults to [WiomTheme.iconSize.md] (24dp). Tint defaults to [WiomTheme.color.icon.nonAction]
+ * — the safe default for decorative icons. For tappable chrome icons, pass
+ * `tint = WiomTheme.color.icon.action`.
  */
 @Composable
 fun WiomIcon(
-    @DrawableRes id: Int,
+    imageVector: ImageVector,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    size: Dp = WiomTheme.icon.md,
-    tint: Color = LocalContentColor.current,
+    size: Dp = WiomTheme.iconSize.md,
+    tint: Color = WiomTheme.color.icon.nonAction,
 ) {
     Icon(
-        painter = painterResource(id),
+        imageVector = imageVector,
         contentDescription = contentDescription,
         modifier = modifier.size(size),
         tint = tint,

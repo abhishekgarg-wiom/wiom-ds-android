@@ -1,175 +1,124 @@
 # Wiom Design System — Android
 
-Jetpack Compose design system for Wiom's Android apps. Provides tokens (colors, typography, spacing, radius, stroke, shadow, icons) and pre-built components so developers don't maintain UI themselves.
+Jetpack Compose library for the Wiom apps.
+
+- **Foundations:** element-first tokens (`bg.*`, `text.*`, `stroke.*`, `icon.*`), Noto Sans via Google Fonts, Material 3 Icons Rounded.
+- **16 components** covering the V2 skill set.
+- **Adoption Kit** — Detekt rules + PR/ADR templates + drop-in CLAUDE.md for consumer repos.
 
 ---
 
-## Integration
-
-### 1. Add JitPack to your root `settings.gradle.kts`
+## Install
 
 ```kotlin
+// settings.gradle.kts
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") }   // <-- add this
+        maven { url = uri("https://jitpack.io") }
     }
 }
-```
 
-### 2. Add the dependency in your `app/build.gradle.kts`
-
-```kotlin
+// app/build.gradle.kts
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v0.3.0")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.0")
+    // Enforce the design system in CI — see ADOPTION.md
+    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v1.0.0")
 }
 ```
-
-> JitPack multi-module coordinate format: `com.github.<user>.<repo>:<module>:<tag>`. The `:designsystem` suffix is the library module — `:sample` is the demo app and is not published.
-
-### 3. Wrap your app in `WiomTheme`
-
-```kotlin
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            WiomTheme {
-                // your app
-            }
-        }
-    }
-}
-```
-
-That's it. All Wiom tokens are now available anywhere under `WiomTheme { }`.
 
 ---
 
-## Usage
+## Use
 
-### Tokens (use from anywhere)
+### Wrap the app
 
 ```kotlin
-@Composable
-fun Example() {
-    Column(
-        modifier = Modifier
-            .background(WiomTheme.colors.surface.base)
-            .padding(WiomTheme.spacing.lg),
-        verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
-    ) {
-        Text(
-            "Heading",
-            style = WiomTheme.type.headingLg,
-            color = WiomTheme.colors.text.primary,
-        )
-        Text(
-            "Body text",
-            style = WiomTheme.type.bodyMd,
-            color = WiomTheme.colors.text.secondary,
-        )
+setContent {
+    WiomTheme {
+        AppNavHost()
     }
 }
+```
+
+### Tokens
+
+```kotlin
+Modifier.background(WiomTheme.color.bg.default)
+Text("Hi", style = WiomTheme.type.bodyLg, color = WiomTheme.color.text.default)
+Modifier.border(WiomTheme.stroke.small, WiomTheme.color.stroke.subtle)
+Modifier.padding(WiomTheme.spacing.lg)
 ```
 
 ### Icons
 
 ```kotlin
-WiomIcon(
-    id = WiomIcons.search,
-    contentDescription = "Search",
-    tint = WiomTheme.colors.text.secondary,
-)
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Search
+
+WiomIcon(Icons.Rounded.Search, contentDescription = "Search", tint = WiomTheme.color.icon.action)
 ```
 
 ---
 
-## What's in v0.1.0
+## What's in v1.0.0
 
 ### Foundations
-43 color tokens · 13 typography tokens · 13 spacing tokens · 7 radius tokens · 2 stroke tokens · 5 shadow tokens · 4 icon size tokens. Wrapped in `WiomTheme { }`.
+- 4 color namespaces (`bg` / `text` / `stroke` / `icon`) + `overlay.scrim`
+- 13 typography tokens on Noto Sans (Google Fonts)
+- Spacing on 4px grid (11 semantic tokens)
+- 7 radius tokens · 2 stroke widths · 5 shadow tokens · 4 icon sizes
 
-### Components (all 13 built)
+### Components
 
 | Component | Purpose |
 |---|---|
-| `WiomButton` + `WiomAcknowledge` | Primary / Secondary / Tertiary / Destructive CTAs + acknowledge-gated flow |
-| `WiomBadge` (Dot / Count / Label) | Status indicator |
-| `WiomCheckbox` | Binary / multi-select form control |
-| `WiomRadio` | Single-choice from a group |
-| `WiomSwitch` | Instant-apply on/off toggle |
-| `WiomInput` / `WiomTextarea` | Form field (phone, OTP, search, currency, password, address) |
-| `WiomListItem` | Unified list row |
-| `WiomTopBar` | Screen header (Small / Medium / Large) |
-| `WiomNavigationBar` | Bottom tab bar (2–5 tabs) |
-| `WiomDropdown` | Single-select picker |
+| `WiomButton` + `WiomAcknowledge` | Primary / Secondary / Tertiary / Pre-booking / Destructive CTAs |
+| `WiomBadge` (Dot / Count / Label) | Passive status indicator |
+| `WiomIconBadge` | Filled icon container — 3 sizes × 6 tones |
+| `WiomSelectionControl` (Checkbox / Radio / Switch) | Indicator-only; labels on `WiomListItem` |
+| `WiomInput` / `WiomTextarea` | Form field — status axis independent of enabled/readOnly |
+| `WiomListItem` | Unified list row — 5 Types (Default / IconWithBg / Checkbox / Radio / Switch) |
+| `WiomTopBar` | Screen header — 3 sizes × 4 states |
+| `WiomNavigationBar` | Bottom nav — 2–5 items, badge support |
 | `WiomPillTabs` / `WiomUnderlineFilter` / `WiomChip` | 3-level filter system |
 | `WiomPagination` (Dots / Bars / Counter / ScrollIndicator) | Position indicator |
-| `WiomBottomSheet` (modal) | Contextual actions / confirmations |
-| `WiomStepperHorizontal` / `WiomStepperVertical` | Known 2–6 step sequence (wizards / status flows) |
+| `WiomStepper` (Horizontal / Vertical) | Known 2–6 step sequence with per-step action slot |
+| `WiomBottomSheet` | 8 sizes via enum + content helpers |
+| `WiomDialog` | Alert / Input / Selection / Illustration / Loading |
+| `WiomLoader` | Spinner / skeleton / full-screen |
+| `WiomToast` | 5 statuses with status-family text rules |
+| `WiomProgressIndicator` | Linear + circular × determinate + indeterminate |
 
-### Icons
-15 Material Symbols Rounded drawables: search · cancel · close · check · phone · visibility / visibilityOff · checkCircle · error · warning · refresh · expandMore · arrowBack · menu · moreVert.
-
-### Coming next
-- `WiomCta` (button) — updated skill pending
-- Noto Sans via Google Fonts provider
-- Paparazzi screenshot tests
-- Detekt lint rule
-- More icons as components need them
+### Deleted from older versions
+- **`WiomDropdown`** — replaced by `WiomInput(readOnly=true)` + `Icons.Rounded.KeyboardArrowDown` + onClick → `WiomBottomSheet` picker
 
 ---
 
-## Repo layout
+## Adopt this in your app
 
-- `designsystem/` — the library module (published)
-- `sample/` — demo app showing every token and component in use
-- `CLAUDE.md` — rules for Claude Code when editing this repo
-- `.github/workflows/` — CI
-- `jitpack.yml` — JitPack build config
+See [ADOPTION.md](./ADOPTION.md). 15 minutes to set up; new feature code is Wiom by default; existing screens stay untouched.
 
----
+## Contributing / reporting issues
 
-## Contributing
+See [CONTRIBUTING.md](./CONTRIBUTING.md) and use the issue templates at https://github.com/abhishekgarg-wiom/wiom-ds-android/issues/new/choose.
 
-All changes go through pull request. Claude Code follows the rules in `CLAUDE.md`. Human contributors should read it too — it's short.
+## Rules for Claude Code
 
-1. Branch from `main`
-2. Edit/add components under `designsystem/src/main/java/com/wiom/designsystem/`
-3. Add preview composables and sample app usage
-4. Update `CHANGELOG.md`
-5. Open PR — CI runs lint and build
-6. Merge → tag new version → JitPack picks it up
-
----
-
-## Design system rules (quick)
-
-**All five rules are hard rules.** Violations break downstream apps.
-
-1. **Token-only.** No raw hex, sp, dp outside `foundation/`.
-2. **Intrinsic sizing.** Never set fixed height/width on text-bearing components.
-3. **Icons through facade.** `WiomIcons.<name>` only — not `Icons.Default.*`.
-4. **Document use cases.** Every component README lists concrete Wiom examples.
-5. **Versioning.** SemVer. Breaking = major. New feature = minor. Fix = patch.
-
-Full rules + rationale in [CLAUDE.md](./CLAUDE.md).
+See [CLAUDE.md](./CLAUDE.md). Loaded automatically every session in this repo.
 
 ---
 
 ## Context
 
-Wiom serves Indian households. Design assumptions:
+Wiom serves Indian households. Design assumptions baked in:
 
-- **India-only userbase** — no country code prefixes in phone fields
-- **Currency:** INR only (`₹`)
-- **Languages:** Hindi + English (budget 1.3x text expansion)
-- **Devices:** Budget Android, min SDK 24
-- **Tone:** trust-heavy (payments/recharges), low cognitive load, outdoor-readable
-
----
+- India-only userbase (no country-code prefixes in phone fields)
+- INR (`₹`) only
+- Hindi + English (budget 1.3× text expansion)
+- Budget Android, min SDK 24, outdoor-readable
+- **Partner app** (active Flutter → Kotlin rewrite, daily new code) and **Customer app** (live Kotlin) are the consumers
 
 ## License
 
