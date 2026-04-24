@@ -25,7 +25,7 @@ WiomTopBar(
     size = WiomTopBarSize.Small,
     state = WiomTopBarState.Default,
     subtitle = null,
-    leading = { WiomTopBarIconAction(Icons.Rounded.ArrowBack, onClick = { ... }) },
+    leading = { WiomTopBarIconAction(Icons.AutoMirrored.Rounded.ArrowBack, onClick = { ... }) },
     actions = {
         WiomTopBarIconAction(Icons.Rounded.Search, onClick = { ... })
         WiomTopBarIconAction(Icons.Rounded.MoreVert, onClick = { ... })

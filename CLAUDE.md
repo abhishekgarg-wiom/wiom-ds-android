@@ -34,6 +34,7 @@ Never use raw hex / sp / dp literals in component code. Foundation files are the
 ## 2. Icons — Material 3 Icons Rounded only
 
 - **Use:** `Icons.Rounded.*` from `androidx.compose.material:material-icons-extended` (already a transitive dep via the library).
+- **Directional icons:** Use `Icons.AutoMirrored.Rounded.*` for any icon whose meaning flips in RTL (`ArrowBack`, `ArrowForward`, `KeyboardArrowLeft`, `KeyboardArrowRight`, `Send`, `List`, `ReceiptLong`, `ExitToApp`, `Login`, etc.). The non-AutoMirrored versions of these are deprecated in Jetpack Compose. Same Rounded shape, just auto-mirrors when the layout direction is RTL.
 - **Wrapper:** `WiomIcon(imageVector, contentDescription, size, tint)` applies Wiom token defaults.
 - **Never use:** `Icons.Default.*`, `Icons.Filled.*`, `Icons.Outlined.*`, `Icons.Sharp.*`, `Icons.TwoTone.*`.
 - **`painterResource(R.drawable.…)`** is reserved for `ic_wiom_*` and `ic_partner_*` brand assets only — never for standard Material icons.

@@ -106,7 +106,7 @@ Defaults shifted:
 
 ## Upgrade workflow
 
-1. Update version: `com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.0`
+1. Update version: `com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.4`
 2. Run build. Every `WiomTheme.colors.*` call site becomes a compile error — mechanically rewrite to `WiomTheme.color.<namespace>.<token>`.
 3. Every `WiomIcons.X` becomes a compile error — replace with `Icons.Rounded.X` import + direct reference.
 4. Every `WiomDropdown(...)` call site becomes a compile error — replace with the `WiomInput(readOnly)` + bottom-sheet pattern above.

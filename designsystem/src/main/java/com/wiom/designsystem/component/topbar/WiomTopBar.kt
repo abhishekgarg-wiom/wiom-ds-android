@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Notifications
@@ -80,7 +80,7 @@ fun WiomTopBar(
     searchPlaceholder: String = "Search",
     onSearchQueryChange: (String) -> Unit = {},
     leading: @Composable () -> Unit = {
-        WiomTopBarIconAction(icon = Icons.Rounded.ArrowBack, onClick = {})
+        WiomTopBarIconAction(icon = Icons.AutoMirrored.Rounded.ArrowBack, onClick = {})
     },
     actions: @Composable RowScope.() -> Unit = {},
 ) {

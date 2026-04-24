@@ -81,8 +81,8 @@ class WiomTokenRule(config: Config = Config.empty) : Rule(config) {
         }
     }
 
-    private fun com.intellij.psi.PsiElement.isInComposable(): Boolean {
-        var parent: com.intellij.psi.PsiElement? = this.parent
+    private fun org.jetbrains.kotlin.com.intellij.psi.PsiElement.isInComposable(): Boolean {
+        var parent: org.jetbrains.kotlin.com.intellij.psi.PsiElement? = this.parent
         while (parent != null) {
             if (parent is KtNamedFunction) {
                 val hasComposable = parent.annotationEntries.any {
