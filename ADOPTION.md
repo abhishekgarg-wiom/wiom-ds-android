@@ -35,7 +35,7 @@ dependencyResolutionManagement {
 In `app/build.gradle.kts`:
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.0")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.4")
 }
 ```
 
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 In `app/build.gradle.kts` (or the module where you lint Compose code):
 ```kotlin
 dependencies {
-    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v1.0.0")
+    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v1.0.4")
 }
 ```
 

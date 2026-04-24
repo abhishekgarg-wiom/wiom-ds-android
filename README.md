@@ -22,9 +22,9 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.0")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.4")
     // Enforce the design system in CI — see ADOPTION.md
-    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v1.0.0")
+    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v1.0.4")
 }
 ```
 
