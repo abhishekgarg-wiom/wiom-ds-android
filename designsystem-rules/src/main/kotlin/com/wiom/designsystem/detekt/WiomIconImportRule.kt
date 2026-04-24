@@ -12,6 +12,9 @@ import org.jetbrains.kotlin.psi.KtImportDirective
  * Flags imports of non-Rounded Material Icons. The Wiom design system uses
  * Material 3 Rounded only: `Icons.Rounded.*` from `androidx.compose.material:material-icons-extended`.
  *
+ * `Icons.AutoMirrored.Rounded.*` is also accepted — same Rounded shape, adds
+ * RTL auto-mirroring for directional icons (ArrowBack, ArrowForward, etc.).
+ *
  * Banned import roots:
  *  - `androidx.compose.material.icons.Icons.Default.*`
  *  - `androidx.compose.material.icons.Icons.Filled.*`

@@ -13,10 +13,10 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Payments
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material.icons.rounded.SupportAgent
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -167,7 +167,7 @@ private fun NavItem(
 private val sampleItems = listOf(
     WiomNavItem("Home", Icons.Rounded.Home),
     WiomNavItem("Plans", Icons.Rounded.Payments),
-    WiomNavItem("Bills", Icons.Rounded.ReceiptLong, hasBadge = true),
+    WiomNavItem("Bills", Icons.AutoMirrored.Rounded.ReceiptLong, hasBadge = true),
     WiomNavItem("Support", Icons.Rounded.SupportAgent),
     WiomNavItem("Profile", Icons.Rounded.Person),
 )

@@ -20,7 +20,7 @@ Items beyond 5 are not supported — don't add a "More" menu. If you need 6, you
 ```kotlin
 data class WiomNavItem(
     val label: String,
-    val icon: ImageVector,        // Icons.Rounded.*
+    val icon: ImageVector,        // Icons.Rounded.* (or Icons.AutoMirrored.Rounded.* for directional icons)
     val hasBadge: Boolean = false,
 )
 
@@ -28,7 +28,7 @@ WiomNavigationBar(
     items = listOf(
         WiomNavItem("Home",    Icons.Rounded.Home),
         WiomNavItem("Plans",   Icons.Rounded.Payments),
-        WiomNavItem("Bills",   Icons.Rounded.ReceiptLong, hasBadge = true),
+        WiomNavItem("Bills",   Icons.AutoMirrored.Rounded.ReceiptLong, hasBadge = true),
         WiomNavItem("Profile", Icons.Rounded.Person),
     ),
     selectedIndex = currentRouteIndex,
