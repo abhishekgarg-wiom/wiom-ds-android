@@ -5,4 +5,7 @@ before_install:
   - sdk install java 17.0.10-tem
 
 install:
-  - ./gradlew :designsystem:publishToMavenLocal :designsystem-rules:publishToMavenLocal -x test
+  # ${VERSION#v} strips the leading "v" from the tag (v1.2.3 -> 1.2.3) so the
+  # published artifact version matches the JitPack path. Falls back to the
+  # VERSION_NAME in gradle.properties for non-tag builds.
+  - ./gradlew :designsystem:publishToMavenLocal :designsystem-rules:publishToMavenLocal -PVERSION_NAME=${VERSION#v} -x test
