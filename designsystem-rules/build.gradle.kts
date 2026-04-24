@@ -14,7 +14,6 @@ kotlin {
 
 dependencies {
     compileOnly(libs.detekt.api)
-    compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable:${libs.versions.kotlin.get()}")
     testImplementation(libs.detekt.test)
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.3")
