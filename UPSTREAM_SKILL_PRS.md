@@ -19,6 +19,11 @@ edge cases the skill text doesn't currently spell out.
 | 6 | `wiom-tabs-filters` | §1.5 (4+ pill tabs) | The "horizontally scrollable" fallback for 4+ pill tabs is described in prose but no example. The Android code allows up to 4 hard-capped (no scroll fallback). **Fix:** either add the scroll-fallback example to the skill or tighten the cap to 3 in code (matching Figma `Count = 1/2/3`). |
 | 7 | `wiom-progress-indicator` | §1.3 (Milestones glyphs) | Stage glyphs are direct-edit per instance in Figma (no `INSTANCE_SWAP` property). The Compose API takes them as `WiomMilestoneStage(label, icon)`, but the skill doesn't say what icon family they should come from. **Fix:** name `Icons.Rounded.*` (or `painterResource(R.drawable.ic_*_rounded)` for brand-specific glyphs) explicitly. |
 | 8 | `wiom-bottomsheet` | §2 (Header) | Skill ships title `headingMd` + subtitle `bodySm` for the Header — but the previous V1 doc said `headingLg` + `bodyMd`. Drift was caught in this rebuild. **Status:** V2 skill is correct; flagged here for traceability. No PR needed unless older docs in the repo still cite the V1 sizes. |
+| **9** | `wiom-design-foundations` | `references/color/primitives.md` (Neutral_700) | `primitives.md` had `Neutral_700 = #665E75`; `core-tokens.md`, `chat.md`, `contrast.md` all use `#5C5570`. The `contrast.md` 6.70 AA ratio is computed against `#5C5570`, so that's the canonical hex. 11 component SKILLs propagated the bad `#665E75` value. **PR filed:** [`wiom-design-system#14`](https://github.com/abhishekgarg-wiom/wiom-design-system/pull/14) — fixes `primitives.md` + 8 component SKILLs (13 swap sites). Android already uses `#5C5570` (matches core-tokens.md). |
+
+## Filed PRs
+- [`wiom-design-system#13`](https://github.com/abhishekgarg-wiom/wiom-design-system/pull/13) — items 1, 2, 3, 4, 6, 7 queued as a `clarifications-from-android-v2-rebuild.md` file at the upstream root for the maintainer to action at their pace.
+- [`wiom-design-system#14`](https://github.com/abhishekgarg-wiom/wiom-design-system/pull/14) — item 9, mechanical hex fix across primitives.md + 8 component SKILLs.
 
 ## Workflow
 
