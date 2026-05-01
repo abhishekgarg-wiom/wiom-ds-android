@@ -41,11 +41,6 @@ internal object WiomColorPrimitives {
     val Neutral_400 = Color(0xFFA7A1B2)
     val Neutral_500 = Color(0xFF898296)
     val Neutral_600 = Color(0xFF736C82)
-    // Upstream spec inconsistency at SHA ed110b6:
-    //   - color/primitives.md says Neutral_700 = #665E75
-    //   - color/core-tokens.md says text.subtle = #5C5570 → Neutral_700
-    // We use the core-tokens.md value (#5C5570) — it's the canonical semantic-token
-    // hex and matches all prior shipped versions. Tracked as upstream PR.
     val Neutral_700 = Color(0xFF5C5570)
     val Neutral_800 = Color(0xFF473F55)
     val Neutral_900 = Color(0xFF352D42)

@@ -1,6 +1,93 @@
-# MIGRATION — v0.3.x → v1.0.0
+# MIGRATION
 
 **If you're starting fresh, skip this file — read [ADOPTION.md](./ADOPTION.md) instead.**
+
+Two upgrade paths are documented here:
+
+- [v1.0.x → v2.0.0](#v10x--v200) — most consumers
+- [v0.3.x → v1.0.0](#v03x--v100) — historical, for completeness
+
+---
+
+## v1.0.x → v2.0.0
+
+The library was rebuilt against the V2 skill set in `wiom-design-system` (locked SHA `ed110b6`). 15 components re-derived from V2 ship values; many V1 drifts corrected. This section is a punch list of the breaking changes consumers will hit.
+
+### 1. Bump dependency
+
+```kotlin
+// app/build.gradle.kts
+dependencies {
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v2.0.0")
+    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v2.0.0")
+}
+```
+
+### 2. Rename / API changes (compile errors you'll hit)
+
+| Symbol | v1.0.x | v2.0.0 |
+|---|---|---|
+| Loader | `WiomBlockingLoader` / `WiomBlockingLoaderStyle` | `WiomBrandLoader` / `WiomBrandLoaderStyle` |
+| ListItem (icon-bg variant) | `WiomListItemIconBadge(leadingBadge = { … })` | `WiomListItemIconBg(leadingIcon = …, leadingTone = …)` (instantiates `WiomIconBadge` internally) |
+| ListItem (selection) | `WiomListItem*(enabled: Boolean)` | `WiomListItem*(state: WiomListItemState)` enum (`Default` / `Disabled`) |
+| ListItem (Checkbox / Radio / Switch helpers) | took a slot `leadingCheckbox = { WiomCheckbox(…) }` | take `selection` / `radioSelected` / `checked` + their callbacks directly; helper instantiates the indicator |
+| Toast | `WiomToastStatus.Neutral` | **dropped** — V2 has only `Critical · Warning · Info · Positive` |
+| Toast container | `bg.{type}Subtle` per status | all 4 share `bg.default` (only the icon + Warning's body carry the status colour) |
+| Toast typography | message `bodyMd` (14 sp) | message `bodyLg` (16 sp) |
+| Toast radius | `radius.medium` (12) | `radius.small` (8) |
+| Toast action colour | per-status | always `text.brand` |
+| BottomSheet size | `WiomBottomSheetSize.IllustrationCta` | **dropped** — use `Illustration` + `WiomBottomSheetActions` slot |
+| BottomSheet illustration | inline 120 dp circle | `WiomBottomSheetIllustration(icon, heading, subtext, tone, leftAligned)` — uses `WiomIconBadge.Lg` (96 dp) |
+| Dialog | `dismissOnClickOutside = true` (default) | **`false` (default)** — scrim tap no longer dismisses |
+| Dialog body text | `type.bodyLg` | `type.bodyMd` |
+| Dialog illustration | 120 dp circle | 144 dp full-width rectangle with `radius.large` |
+| Dialog selection rows | inline `SelectionRow` | `WiomListItemRadio` instances |
+| Dialog buttons | stacked only | new `WiomDialogButtonsLayout { Stacked, SideBySide }` parameter |
+| ListItem chevron tint | `icon.action` | **`icon.brand`** (chevron is the row's tap-affordance signal) |
+| ListItem | "selected dot" 8 dp circle in trailing slot | **dropped** — Selected = `bg.selected` overlay only |
+| TopBar | no fixed heights | heights locked: Small 64, Medium 112, Large 152 |
+| TopBar | no `statusBarsPadding()` | bar consumes the OS status-bar inset |
+| TopBar Search | display-only `Text` placeholder | wraps a real `BasicTextField` |
+| TabsFilters | typography mixed | `labelMd` for **all states** |
+| TabsFilters | underline indicator `stroke.brandFocus` | `bg.brand` (element-first; indicator is a fill, not a stroke) |
+| Chip | Selected: no border | Selected: 1 dp brand border per Figma ship + trailing 16 dp close ✕ |
+| Pagination | inactive tint `stroke.subtle` | `bg.muted` |
+| Pagination Counter | hides chevron at bounds behind a `Spacer` | renders both chevrons; non-tappable side tints `icon.disabled` |
+
+### 3. Removed components
+
+- **`WiomStepper`** — no V2 upstream skill yet. Tracked for reinstatement once the skill exists. Workaround: compose with `WiomProgressMilestones` (new in v2.0.0) for status visuals, or `Column` + `WiomListItem` rows for per-step navigation.
+
+### 4. New components you can adopt
+
+| Component | Use for |
+|---|---|
+| `WiomOtp(value, onValueChange, length, helper, timer, status, enabled)` | Boxed verification-code field. Don't fake an OTP with a spaced-digits `WiomInput`. |
+| `WiomProgressCompletion(title, value, state)` | Rich completion meter — KYC / referral / earnings cards. 4-state enum drives fill %, colour, and pill copy in lockstep. |
+| `WiomProgressMilestones(title, subtitle, stages, currentStage, showLabels)` | 2..5-stage tracker — install / delivery / verification. |
+| `WiomLinearProgress` (loader-sibling) | Short determinate waits (file upload). Distinct from `WiomProgressIndicator`'s linear, which is for completion meters. |
+| `WiomDots` | Chat typing indicator. |
+| `WiomTopBarStatusBar(isDarkVariant)` | Pairs the OS status-bar lightness with the top bar. Call once per screen after `enableEdgeToEdge`. |
+
+### 5. Foundation token changes
+
+- **New soft strokes**: `stroke.brand` / `stroke.positive` / `stroke.critical` / `stroke.info`. The previous `stroke.warningFocus` substitute is gone — use `stroke.warning` (gold soft stroke).
+- **`spacing.xxs` (2 dp) dropped** — off the 4-dp grid per V2 spec. Use `spacing.xs` (4 dp) instead.
+- `Neutral_700` hex corrected to `#5C5570` (`primitives.md` had `#665E75` upstream — fixed in `wiom-design-system#14`).
+
+### 6. Step-by-step
+
+1. Bump the dependency (above).
+2. Run a build. Triage compile errors against the rename table — most are mechanical 1:1 swaps.
+3. Re-run any UI screenshot tests. The two changes most likely to drop tests:
+   - Toast surface colour (per-status tinted → uniform `bg.default`).
+   - ListItem chevron tint (`icon.action` → `icon.brand` pink).
+4. If you used `Modifier.alpha(0.38f)` to "disable" anything, replace with the appropriate `state: …Disabled` enum or `enabled = false` parameter — V2 enforces foundations Pattern A (token swap) over opacity.
+5. If your screens render a `WiomTopBar`, add `WiomTopBarStatusBar(isDarkVariant)` and confirm `enableEdgeToEdge` is called in `Activity.onCreate`.
+
+---
+
+## v0.3.x → v1.0.0
 
 This document covers the v0.3.x → v1.0.0 upgrade path for apps that were already on a pre-1.0 release. Based on internal signal, nobody is actually on v0.3.x in production — but this is here for completeness.
 
