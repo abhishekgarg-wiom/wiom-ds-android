@@ -1,70 +1,77 @@
 # WiomListItem
 
-Unified list-row primitive. One component covers every row in the app — navigation, settings,
-selection (checkbox / radio), toggles (switch), prominent feature entries (icon with bg), and
-info-display rows with trailing meta.
+Unified list-row primitive. One component covers every row in the app — navigation,
+settings, selection (checkbox / radio), toggles (switch), prominent feature entries
+(icon-with-bg), and info-display rows with trailing meta.
 
-Replaces the previous 288-variant library by moving from structural variants to a 5-Type
-hybrid: one variant axis (Type) + booleans/slots for state.
+**1 component · 5 Types × 2 States = 10 ship variants** (Figma `1655:487`).
 
 ## 5 Types
 
-| Type         | Leading                                                    | Trailing                          | Use case                                       |
-|--------------|------------------------------------------------------------|-----------------------------------|------------------------------------------------|
-| `Default`    | 24dp `WiomIcon` (optional)                                 | `chevron_right` (can be hidden)   | Navigation / settings / status / info rows     |
-| `IconWithBg` | `WiomIconBadge` (48dp tinted container)                    | `chevron_right` (can be hidden)   | Prominent settings sections, feature entries   |
-| `Checkbox`   | `WiomCheckbox` (label is this row's `primary`)             | —                                 | Multi-select lists                             |
-| `Radio`      | `WiomRadio` (label is this row's `primary`)                | —                                 | Single-select lists                            |
-| `Switch`     | 24dp `WiomIcon` (optional)                                 | `WiomSwitch`                      | Settings toggles (notifications, dark mode)    |
+| Type      | Leading                                       | Trailing                          | Use case                                       |
+|-----------|-----------------------------------------------|-----------------------------------|------------------------------------------------|
+| `Default` | 24 dp `WiomIcon` (optional)                   | `chevron_right` (`icon.brand`)    | Navigation / settings / status / info rows     |
+| `IconBg`  | 48 dp `WiomIconBadge` (Md, tone-swappable)    | `chevron_right` (`icon.brand`)    | Prominent settings sections, feature entries   |
+| `Checkbox`| 24 dp `WiomCheckbox`                          | —                                 | Multi-select lists                             |
+| `Radio`   | 24 dp `WiomRadio`                             | —                                 | Single-select lists                            |
+| `Switch`  | 24 dp `WiomIcon` (optional)                   | 52 × 32 dp `WiomSwitch`           | Settings toggles (notifications, dark mode)    |
 
 ## API
 
 ```kotlin
+enum class WiomListItemType  { Default, IconBg, Checkbox, Radio, Switch }
+enum class WiomListItemState { Default, Disabled }
+
 @Composable
-fun WiomListItem(                               // Type = Default
+fun WiomListItem(                                       // Default Type
     primary: String,
     modifier: Modifier = Modifier,
     secondary: String? = null,
-    trailingMeta: String? = null,
     leadingIcon: ImageVector? = null,
-    hasTrailingIcon: Boolean = true,            // false = hide chevron (menu row, status row)
+    showTrailingChevron: Boolean = true,
+    trailingMeta: String? = null,
     selected: Boolean = false,
-    enabled: Boolean = true,
+    state: WiomListItemState = WiomListItemState.Default,
     onClick: (() -> Unit)? = null,
 )
 
 @Composable
-fun WiomListItemIconBadge(                      // Type = IconWithBg
+fun WiomListItemIconBg(                                 // IconBg Type
     primary: String,
-    leadingBadge: @Composable () -> Unit,       // caller supplies a WiomIconBadge instance
+    leadingIcon: ImageVector,
+    leadingTone: WiomIconBadgeTone = WiomIconBadgeTone.Neutral,
+    showTrailingChevron: Boolean = true,
     ...
 )
 
 @Composable
-fun WiomListItemCheckbox(                       // Type = Checkbox
+fun WiomListItemCheckbox(                               // Checkbox Type
     primary: String,
-    leadingCheckbox: @Composable () -> Unit,    // caller supplies a WiomCheckbox instance
+    selection: WiomCheckboxSelection,
+    onSelectionChange: (WiomCheckboxSelection) -> Unit,
     ...
-    onClick: (() -> Unit)? = null,              // tap-the-row-to-toggle
+    selected: Boolean = false,                          // independent of the checkbox value
 )
 
 @Composable
-fun WiomListItemRadio(                          // Type = Radio
+fun WiomListItemRadio(                                  // Radio Type
     primary: String,
-    leadingRadio: @Composable () -> Unit,       // caller supplies a WiomRadio instance
-    selected: Boolean = false,                  // picker-row highlight
+    radioSelected: Boolean,
+    onRadioSelect: () -> Unit,
     ...
+    selected: Boolean = false,
 )
 
 @Composable
-fun WiomListItemSwitch(                         // Type = Switch
+fun WiomListItemSwitch(                                 // Switch Type — never carries selected
     primary: String,
-    trailingSwitch: @Composable () -> Unit,     // caller supplies a WiomSwitch instance
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     leadingIcon: ImageVector? = null,
     ...
 )
 
-// Raw slot API for custom leading/trailing compositions (avatars, nested badges, etc.)
+// Raw slot API for custom leading/trailing (avatars, nested badges, etc.)
 @Composable
 fun WiomListItemBase(
     primary: String,
@@ -74,63 +81,55 @@ fun WiomListItemBase(
 )
 ```
 
-### Why `leadingBadge` / `leadingCheckbox` / `trailingSwitch` are slots
+The Checkbox / Radio / Switch helpers instantiate the indicator atoms internally
+(`WiomCheckbox` / `WiomRadio` / `WiomSwitch` from `selectioncontrol`). Their `onToggle` /
+`onSelect` / `onCheckedChange` is set to `null` so the indicator is decorative in the row's
+a11y tree — the **row tap** is the source of truth.
 
-These sub-components (`WiomIconBadge`, `WiomCheckbox`, `WiomRadio`, `WiomSwitch`) live in
-sibling modules (`component/iconbadge`, `component/selectioncontrol`). Passing them as
-`@Composable () -> Unit` slots decouples this module from theirs — you hold the
-`checked`/`tone`/`state` state in your screen and pass a configured instance in. This mirrors
-the Figma model where the nested component's properties bubble up to the List Item instance.
+## Tokens
 
-## Tokens used
+| Slot                       | Token                                       |
+|----------------------------|---------------------------------------------|
+| Outer padding              | `space.lg` (16 dp) — all sides              |
+| Leading → content gap      | `space.md` (12 dp)                          |
+| Primary → secondary gap    | `space.xs` (4 dp)                           |
+| Meta → trailing icon gap   | `space.sm` (8 dp)                           |
+| Min height                 | `space.huge` (48 dp) via `defaultMinSize`   |
+| Primary text               | `type.bodyLg` · `text.default`              |
+| Secondary text             | `type.bodyMd` · `text.subtle`               |
+| Trailing meta              | `type.bodyMd` · `text.subtle`               |
+| Leading icon tint          | `icon.nonAction`                            |
+| **Trailing chevron tint**  | **`icon.brand`** — the row's tap-affordance signal |
+| Disabled text / icon       | `text.disabled` / `icon.disabled`           |
+| Pressed overlay            | `bg.subtle`                                 |
+| Selected overlay           | `bg.selected`                               |
 
-| Part                  | Token                                             |
-|-----------------------|---------------------------------------------------|
-| Horizontal padding    | `space.lg` (16dp)                                 |
-| Vertical padding      | `space.md` (12dp)                                 |
-| Leading → content gap | `space.md` (12dp)                                 |
-| Primary → secondary   | `space.xs` (4dp)                                  |
-| Meta → icon gap       | `space.sm` (8dp)                                  |
-| Min height            | 48dp via `defaultMinSize`                         |
-| Primary text          | `type.bodyLg` · `text.default`                    |
-| Secondary text        | `type.bodyMd` · `text.subtle`                     |
-| Trailing meta         | `type.bodyMd` · `text.subtle`                     |
-| Leading icon tint     | `icon.nonAction`                                  |
-| Chevron tint          | `icon.action`                                     |
-| Disabled text         | `text.disabled`                                   |
-| Disabled icon         | `icon.disabled`                                   |
-| Selected row fill     | `bg.selected` (Brand_200 #FFCCED)                 |
-| Selected dot          | 8dp circle · `bg.brand`                           |
+## States
 
-## Selected state
+| State    | Visual                                              | When                                     |
+|----------|-----------------------------------------------------|------------------------------------------|
+| Pressed  | `bg.subtle` overlay (runtime via `InteractionSource`) | Tap feedback                             |
+| Selected | `bg.selected` overlay                               | Currently-chosen menu item / picker row  |
+| Disabled | All content tokens swap to `*.disabled`             | Row gated, prerequisite missing          |
 
-`selected = true` is reserved for picker-sheet rows where you want to show the current choice:
-
-- Fills the whole row with `bg.selected`.
-- Renders an 8dp `bg.brand` dot at the trailing side.
-- On the Default Type, the chevron is suppressed when selected (the dot + highlight are the
-  trailing signal). Restore the chevron by keeping `selected = false` and using a different
-  mechanism.
-- `Switch` Type ignores `selected` — the toggle is the signal.
+**Pressed XOR Selected** — Selected wins. **Disabled overrides both** — disabled rows show
+no press feedback or selection. Disabled is foundations Pattern A — never `Modifier.alpha`.
 
 ## Composition rules
 
-1. Stack list items with **0 gap** — the 12dp vertical padding on each row creates natural
-   separation. Do not add dividers between them.
-2. Place a stack inside a card (`radius.large` corners, `bg.default` or `bg.subtle`). The card
-   takes zero padding — rows supply their own.
-3. Minimum 48dp height via `defaultMinSize`. Rows grow taller when secondary text is set.
-4. Wrap pressed-state visuals in the standard Compose ripple via `Modifier.clickable` (already
-   applied when `onClick` is non-null and `enabled = true`).
+1. **Stack rows with 0 gap and no dividers.** The 16 dp vertical padding on each row creates
+   natural separation.
+2. **Card hosting the stack uses 0 internal padding** — rows supply their own.
+3. **Min 48 dp height** via `defaultMinSize`. Switch rows compute to ~64 dp because of the
+   trailing track height; let them hug.
+4. **Don't put a CTA in a row.** Rows route navigation / selection / display. Action goes
+   on the destination page.
+5. **Primary text is the label** for Checkbox / Radio / Switch types — never inside the
+   indicator.
 
-## Don'ts
+## Examples
 
-- **Don't** use Pressed + Disabled together.
-- **Don't** add dividers between stacked rows.
-- **Don't** ship 3+ lines of text — that's a card, not a row.
-- **Don't** set a fixed height. Use `defaultMinSize` only.
-
-## Example: settings card
+### Settings card
 
 ```kotlin
 Column(
@@ -138,40 +137,76 @@ Column(
         .clip(RoundedCornerShape(WiomTheme.radius.large))
         .background(WiomTheme.color.bg.default)
 ) {
-    WiomListItem("Account", leadingIcon = Icons.Rounded.Person, onClick = { /* ... */ })
-    WiomListItem("Notifications", leadingIcon = Icons.Rounded.Notifications, onClick = { /* ... */ })
+    WiomListItem("Account", leadingIcon = Icons.Rounded.Person, onClick = onAccount)
+    WiomListItem("Notifications", leadingIcon = Icons.Rounded.Notifications, onClick = onNotifs)
     WiomListItem(
         "Language",
         leadingIcon = Icons.Rounded.Language,
         trailingMeta = "English",
-        onClick = { /* ... */ },
+        onClick = onLanguage,
     )
-    WiomListItem("Privacy", leadingIcon = Icons.Rounded.Lock, onClick = { /* ... */ })
+    WiomListItem("Privacy", leadingIcon = Icons.Rounded.Lock, onClick = onPrivacy)
 }
 ```
 
-## Example: picker sheet
+### Picker sheet (single-select via row tap)
 
 ```kotlin
-WiomBottomSheet(onDismiss = { ... }) {
-    languages.forEach { lang ->
-        WiomListItem(
-            primary = lang.label,
-            selected = lang == selectedLanguage,
-            onClick = { selectedLanguage = lang; dismiss() },
-        )
-    }
+options.forEach { opt ->
+    WiomListItem(
+        primary = opt,
+        selected = opt == picked,
+        showTrailingChevron = false,
+        onClick = { picked = opt; dismiss() },
+    )
 }
 ```
 
-## Example: multi-select (Checkbox Type)
+### Multi-select (Checkbox)
 
 ```kotlin
-WiomListItemCheckbox(
-    primary = "Save my login",
-    leadingCheckbox = {
-        WiomCheckbox(checked = saveLogin, onCheckedChange = null)  // null — row handles tap
-    },
-    onClick = { saveLogin = !saveLogin },
+val picked = remember { mutableStateMapOf<String, Boolean>() }
+plans.forEach { plan ->
+    WiomListItemCheckbox(
+        primary = plan,
+        selection = if (picked[plan] == true) WiomCheckboxSelection.Selected
+                    else WiomCheckboxSelection.No,
+        onSelectionChange = { next ->
+            picked[plan] = (next == WiomCheckboxSelection.Selected)
+        },
+    )
+}
+```
+
+### Toggle settings (Switch)
+
+```kotlin
+WiomListItemSwitch(
+    primary = "Push notifications",
+    secondary = "Plan renewals and offers",
+    leadingIcon = Icons.Rounded.Notifications,
+    checked = pushEnabled,
+    onCheckedChange = { pushEnabled = it },
 )
 ```
+
+### Prominent settings entry (IconBg)
+
+```kotlin
+WiomListItemIconBg(
+    primary = "Wallet",
+    secondary = "Recharges, refunds, pending payments",
+    leadingIcon = Icons.Rounded.AccountBalanceWallet,
+    leadingTone = WiomIconBadgeTone.Brand,
+    onClick = onWallet,
+)
+```
+
+## Don'ts
+
+- ❌ Pressed + Selected together — Selected wins.
+- ❌ Dividers between stacked rows — the padding handles it.
+- ❌ `Modifier.alpha(...)` for Disabled — use `*.disabled` tokens.
+- ❌ 3+ lines of text — that's a card, not a row.
+- ❌ Fixed `height(...)` — use `defaultMinSize` only.
+- ❌ Adding a label inside `WiomCheckbox` / `WiomRadio` / `WiomSwitch` — those are indicator-only.

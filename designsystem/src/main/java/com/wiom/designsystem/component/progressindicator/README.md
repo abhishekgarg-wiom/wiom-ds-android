@@ -6,7 +6,7 @@ Determinate and indeterminate progress bars / rings for the Wiom Android library
 
 Tell the user *how far along a task has progressed*. Use when the caller has a known 0..1 completion value (determinate) or when the task is active but its endpoint is unknown (indeterminate).
 
-For indeterminate "something is happening" with no bar — reach for `WiomSpinner` or `WiomStatusLoader` from the Loader family instead. For named-stage trackers (installation, KYC) use `WiomStepper`.
+For indeterminate "something is happening" with no bar — reach for `WiomSpinner` or `WiomStatusLoader` from the Loader family instead. Named-stage trackers (installation, KYC) belong here as `WiomProgressMilestones`.
 
 ## Variants
 

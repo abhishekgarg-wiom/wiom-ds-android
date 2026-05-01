@@ -53,12 +53,13 @@ fun WiomPillTabs(
 ) {
     require(tabs.size in 2..4) { "WiomPillTabs supports 2–4 tabs, got ${tabs.size}." }
 
+    // Skill §1.1: Track padding `space-4` all sides; items butt up against each other within
+    // the track (no extra gap — the radius isolates them visually).
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(WiomTheme.radius.medium))
             .background(WiomTheme.color.bg.muted)
             .padding(WiomTheme.spacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         tabs.forEachIndexed { index, label ->
@@ -99,8 +100,9 @@ private fun PillTabItem(
     ) {
         Text(
             text = label,
-            style = if (selected) WiomTheme.type.labelMd else WiomTheme.type.bodyMd,
-            color = if (selected) WiomTheme.color.text.brand else WiomTheme.color.text.subtle,
+            // Skill §1.1: label is `type.label.md` for **both states** — pill tabs aren't body text.
+            style = WiomTheme.type.labelMd,
+            color = if (selected) WiomTheme.color.text.selected else WiomTheme.color.text.subtle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -188,26 +190,24 @@ private fun UnderlineFilterItem(
     hugContent: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val indicatorColor = WiomTheme.color.stroke.brandFocus // = stroke.selected = bg.brand
+    // Skill §2.2 indicator note: it's a **filled bar (`bg.*` slot)**, not a stroke. Element-first
+    // discipline says use `bg.brand`, not `stroke.brandFocus`.
+    val indicatorColor = WiomTheme.color.bg.brand
     val indicatorPx = with(LocalDensity.current) { WiomTheme.stroke.medium.toPx() }
 
     Column(
         modifier = modifier
             .clickable(onClick = onClick)
-            .defaultMinSize(minHeight = WiomTheme.spacing.huge)
-            .padding(horizontal = if (hugContent) WiomTheme.spacing.lg else WiomTheme.spacing.sm),
+            .defaultMinSize(minHeight = WiomTheme.spacing.huge),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Label sits centered; underline = text width when hugContent=true, otherwise
-        // = slot width via fillMaxWidth() inside the weight(1f) column.
-        // Wrapper Box holds the label and — when selected — draws a 2dp underline at its bottom
-        // edge. When hugContent=false the Box uses fillMaxWidth() inside the weight(1f) Column so
-        // the underline spans the slot; when hugContent=true the Box wraps the text so the
-        // underline hugs the label width.
+        // Skill §2.1: Content padding `space-16` H × `space-12` V. Indicator width matches the
+        // content row above (fills item width — never hugs label width even in scroll mode).
         Box(
             modifier = Modifier
                 .then(if (hugContent) Modifier else Modifier.fillMaxWidth())
+                .padding(horizontal = WiomTheme.spacing.lg, vertical = WiomTheme.spacing.md)
                 .drawBehind {
                     if (selected) {
                         val y = size.height - indicatorPx / 2f
@@ -219,13 +219,13 @@ private fun UnderlineFilterItem(
                             cap = androidx.compose.ui.graphics.StrokeCap.Round,
                         )
                     }
-                }
-                .padding(vertical = WiomTheme.spacing.md),
+                },
         ) {
             Text(
                 modifier = Modifier.align(Alignment.Center),
                 text = label,
-                style = if (selected) WiomTheme.type.labelMd else WiomTheme.type.bodyMd,
+                // Skill §2.1: `type.label.md` for both states.
+                style = WiomTheme.type.labelMd,
                 color = if (selected) WiomTheme.color.text.brand else WiomTheme.color.text.subtle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -254,17 +254,28 @@ fun WiomChip(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    onClose: (() -> Unit)? = null,
 ) {
     val shape = RoundedCornerShape(WiomTheme.radius.small)
 
-    // Selected: filled `bg.selected`, NO border (filled-state rule).
-    // Unselected: 1dp `stroke.subtle` border, transparent fill.
-    val selectionModifier = if (selected) {
-        Modifier
+    // Skill §3.2 ship values:
+    //   Unselected — transparent fill, 1 dp `stroke.subtle` border, label `text.default`
+    //   Selected   — `bg.selected` fill, 1 dp `stroke.selected` border, label `text.selected`
+    //   Disabled   — `bg.disabled` fill, **no border** (foundations Pattern A), label `text.disabled`
+    val selectionModifier = when {
+        !enabled -> Modifier
+            .clip(shape)
+            .background(WiomTheme.color.bg.disabled)
+        selected -> Modifier
             .clip(shape)
             .background(WiomTheme.color.bg.selected)
-    } else {
-        Modifier
+            .border(
+                width = WiomTheme.stroke.small,
+                color = WiomTheme.color.stroke.selected,
+                shape = shape,
+            )
+        else -> Modifier
             .clip(shape)
             .border(
                 width = WiomTheme.stroke.small,
@@ -272,21 +283,41 @@ fun WiomChip(
                 shape = shape,
             )
     }
+    val labelColor = when {
+        !enabled -> WiomTheme.color.text.disabled
+        selected -> WiomTheme.color.text.selected
+        else -> WiomTheme.color.text.default
+    }
 
-    Box(
+    Row(
         modifier = modifier
             .then(selectionModifier)
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = WiomTheme.spacing.md, vertical = WiomTheme.spacing.sm),
-        contentAlignment = Alignment.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs),
     ) {
         Text(
             text = label,
-            style = if (selected) WiomTheme.type.labelMd else WiomTheme.type.bodyMd,
-            color = if (selected) WiomTheme.color.text.selected else WiomTheme.color.text.default,
+            // Skill §3.2 ship value: SemiBold (`label.md`) across all states. Description's claim
+            // that Unselected uses Regular is wrong — Figma ships SemiBold everywhere.
+            style = WiomTheme.type.labelMd,
+            color = labelColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        if (selected && enabled) {
+            // Skill §3.1: Selected ships with a trailing 16 dp close ✕ glyph in `icon.brand`. Tap
+            // dispatches `onClose` if provided; otherwise falls back to `onClick` (deselect).
+            // Hidden on Disabled — disabled chips aren't interactive.
+            com.wiom.designsystem.foundation.icon.WiomIcon(
+                imageVector = androidx.compose.material.icons.Icons.Rounded.Close,
+                contentDescription = "Remove ${'$'}label",
+                size = WiomTheme.iconSize.xs,
+                tint = WiomTheme.color.icon.brand,
+                modifier = Modifier.clickable { (onClose ?: onClick).invoke() },
+            )
+        }
     }
 }
 

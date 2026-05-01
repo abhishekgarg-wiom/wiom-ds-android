@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -83,7 +82,7 @@ fun WiomPaginationDots(
                         .clip(RoundedCornerShape(WiomTheme.radius.full))
                         .background(
                             if (active) WiomTheme.color.bg.brand
-                            else WiomTheme.color.stroke.subtle
+                            else WiomTheme.color.bg.muted
                         )
                 )
             }
@@ -139,7 +138,7 @@ fun WiomPaginationBars(
                         .clip(RoundedCornerShape(WiomTheme.radius.full))
                         .background(
                             if (filled) WiomTheme.color.bg.brand
-                            else WiomTheme.color.stroke.subtle
+                            else WiomTheme.color.bg.muted
                         )
                 )
             }
@@ -175,52 +174,56 @@ fun WiomPaginationCounter(
     onNext: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showPrev = current > 1
-    val showNext = current < total
+    // Skill §1: Both chevrons are always rendered. The variant changes the *tint* of the chevron
+    // the user can't act on, never its visibility — so the control's footprint stays constant
+    // across page transitions. Tappable = `icon.action`; non-tappable = `icon.disabled`.
+    val canPrev = current > 1
+    val canNext = current < total
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (showPrev) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clickable(onClick = onPrev),
-                contentAlignment = Alignment.Center,
-            ) {
-                WiomIcon(
-                    imageVector = Icons.Rounded.ChevronLeft,
-                    contentDescription = "Previous",
-                    size = WiomTheme.iconSize.md,
-                    tint = WiomTheme.color.icon.nonAction,
-                )
-            }
-        } else {
-            Spacer(Modifier.size(48.dp))
-        }
+        ChevronCell(
+            icon = Icons.Rounded.ChevronLeft,
+            contentDescription = "Previous page",
+            enabled = canPrev,
+            onClick = onPrev,
+        )
         Text(
             text = "$current / $total",
+            // Skill §2: counter label uses `text.default` for full contrast — it's the only text.
             style = WiomTheme.type.labelMd,
-            color = WiomTheme.color.text.subtle,
+            color = WiomTheme.color.text.default,
             textAlign = TextAlign.Center,
         )
-        if (showNext) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clickable(onClick = onNext),
-                contentAlignment = Alignment.Center,
-            ) {
-                WiomIcon(
-                    imageVector = Icons.Rounded.ChevronRight,
-                    contentDescription = "Next",
-                    size = WiomTheme.iconSize.md,
-                    tint = WiomTheme.color.icon.nonAction,
-                )
-            }
-        } else {
-            Spacer(Modifier.size(48.dp))
-        }
+        ChevronCell(
+            icon = Icons.Rounded.ChevronRight,
+            contentDescription = "Next page",
+            enabled = canNext,
+            onClick = onNext,
+        )
+    }
+}
+
+@Composable
+private fun ChevronCell(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(48.dp)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        WiomIcon(
+            imageVector = icon,
+            contentDescription = if (enabled) contentDescription else null,
+            size = WiomTheme.iconSize.md,
+            tint = if (enabled) WiomTheme.color.icon.action else WiomTheme.color.icon.disabled,
+        )
     }
 }
 
@@ -257,6 +260,57 @@ fun WiomPaginationScrollIndicator(
             modifier = Modifier
                 .offset(x = thumbOffset)
                 .width(thumbWidth)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(WiomTheme.radius.full))
+                .background(WiomTheme.color.bg.brand)
+        )
+    }
+}
+
+/**
+ * `LazyListState`-driven scroll indicator (skill §8 — preferred for horizontal rails).
+ *
+ * Derives thumb fraction + offset from `listState.layoutInfo`:
+ *   - `thumbFractionOfTrack` = visible viewport size / total content size, floored at 10 %
+ *     so it stays readable on long rails.
+ *   - `thumbStartFraction` = scrolled distance / max scrollable distance.
+ *
+ * Approximate for variable-height items — works well for horizontal rails of similar-sized
+ * cards which is the common case.
+ *
+ * @param listState the `LazyListState` driving the scroll position.
+ * @param modifier Modifier (typically `fillMaxWidth()` inside the screen gutter).
+ */
+@Composable
+fun WiomPaginationScrollIndicator(
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    modifier: Modifier = Modifier,
+) {
+    val info = listState.layoutInfo
+    val itemCount = info.totalItemsCount.coerceAtLeast(1)
+    val firstVisible = listState.firstVisibleItemIndex
+    val firstOffsetPx = listState.firstVisibleItemScrollOffset.toFloat()
+    val avgItemSize = info.visibleItemsInfo.firstOrNull()?.size?.toFloat()?.coerceAtLeast(1f) ?: 1f
+    val viewportSize = (info.viewportEndOffset - info.viewportStartOffset).toFloat()
+    val totalSize = (avgItemSize * itemCount).coerceAtLeast(1f)
+
+    val thumbFractionOfTrack = (viewportSize / totalSize).coerceIn(0.1f, 1f)
+    val scrolledFraction = (firstVisible + firstOffsetPx / avgItemSize) / itemCount.toFloat()
+    val maxScrollFraction = (1f - thumbFractionOfTrack).coerceAtLeast(0f)
+    val thumbStartFraction = (scrolledFraction.coerceIn(0f, 1f)) * maxScrollFraction
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .clip(RoundedCornerShape(WiomTheme.radius.full))
+            .background(WiomTheme.color.bg.muted),
+    ) {
+        val railWidth = maxWidth
+        Box(
+            modifier = Modifier
+                .offset(x = railWidth * thumbStartFraction)
+                .width(railWidth * thumbFractionOfTrack)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(WiomTheme.radius.full))
                 .background(WiomTheme.color.bg.brand)

@@ -20,7 +20,7 @@ body:
       label: Concrete use case
       description: |
         Which Wiom screen / flow needs this? What's the user trying to accomplish?
-        Example: "The recharge confirmation screen needs a Stepper component for quantity."
+        Example: "The plan-comparison screen needs a side-by-side feature matrix component."
     validations:
       required: true
   - type: input

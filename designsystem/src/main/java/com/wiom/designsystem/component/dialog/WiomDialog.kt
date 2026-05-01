@@ -1,7 +1,6 @@
 package com.wiom.designsystem.component.dialog
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Celebration
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,9 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +32,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.wiom.designsystem.component.button.WiomButton
 import com.wiom.designsystem.component.button.WiomButtonType
+import com.wiom.designsystem.component.listitem.WiomListItemRadio
+import com.wiom.designsystem.component.loader.WiomSpinner
+import com.wiom.designsystem.component.loader.WiomSpinnerSize
+import com.wiom.designsystem.component.loader.WiomSpinnerTone
 import com.wiom.designsystem.foundation.icon.WiomIcon
 import com.wiom.designsystem.theme.WiomTheme
 
@@ -43,14 +43,26 @@ import com.wiom.designsystem.theme.WiomTheme
  * A single action button inside a Wiom dialog.
  *
  * Maps 1:1 to `WiomButton(text = label, onClick = onClick, type = type)`. Helpers
- * pass `WiomDialogAction` instances to produce stacked full-width buttons inside
- * the dialog's action area.
+ * pass `WiomDialogAction` instances to produce full-width or side-by-side buttons
+ * inside the dialog's action area, depending on [WiomDialogButtonsLayout].
  */
 data class WiomDialogAction(
     val label: String,
     val onClick: () -> Unit,
     val type: WiomButtonType = WiomButtonType.Primary,
 )
+
+/**
+ * Layout for the dialog's action group.
+ *
+ * - [Stacked] — confirm on top, dismiss below; each CTA fills the row. Default and
+ *   safer choice — works for any label length.
+ * - [SideBySide] — dismiss left, confirm right; each CTA `Modifier.weight(1f)`.
+ *   Only safe when both labels are short (≈ 14 chars Hindi / 18 chars English) —
+ *   otherwise truncation. The 264 dp content width splits to ≈ 126 dp per cell
+ *   with the 12 dp inter-CTA gap.
+ */
+enum class WiomDialogButtonsLayout { Stacked, SideBySide }
 
 /**
  * Low-level Wiom dialog shell.
@@ -68,7 +80,8 @@ fun WiomDialog(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     dismissOnBackPress: Boolean = true,
-    dismissOnClickOutside: Boolean = true,
+    // V2 §3 — scrim tap never dismisses, users always exit via an explicit CTA or system back.
+    dismissOnClickOutside: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = WiomTheme.color
@@ -118,6 +131,7 @@ fun WiomAlertDialog(
     modifier: Modifier = Modifier,
     secondaryAction: WiomDialogAction? = null,
     icon: ImageVector? = null,
+    buttonsLayout: WiomDialogButtonsLayout = WiomDialogButtonsLayout.Stacked,
 ) {
     val colors = WiomTheme.color
     val type = WiomTheme.type
@@ -152,14 +166,14 @@ fun WiomAlertDialog(
                 )
                 Text(
                     text = body,
-                    style = type.bodyLg,
+                    style = type.bodyMd,
                     color = colors.text.subtle,
                 )
             }
         }
-        // Alert uses the 48dp "main-to-buttons" gap per the skill.
+        // V2 §2 — main → buttons gap is `space-48` for ALL 5 types.
         Spacer(modifier = Modifier.height(spacing.huge))
-        DialogActions(primary = primaryAction, secondary = secondaryAction)
+        DialogActions(primary = primaryAction, secondary = secondaryAction, layout = buttonsLayout)
     }
 }
 
@@ -179,6 +193,7 @@ fun WiomInputDialog(
     modifier: Modifier = Modifier,
     body: String? = null,
     secondaryAction: WiomDialogAction? = null,
+    buttonsLayout: WiomDialogButtonsLayout = WiomDialogButtonsLayout.Stacked,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = WiomTheme.color
@@ -196,7 +211,7 @@ fun WiomInputDialog(
                 if (body != null) {
                     Text(
                         text = body,
-                        style = type.bodyLg,
+                        style = type.bodyMd,
                         color = colors.text.subtle,
                     )
                 }
@@ -207,8 +222,8 @@ fun WiomInputDialog(
                 content = content,
             )
         }
-        Spacer(modifier = Modifier.height(spacing.xl))
-        DialogActions(primary = primaryAction, secondary = secondaryAction)
+        Spacer(modifier = Modifier.height(spacing.huge))
+        DialogActions(primary = primaryAction, secondary = secondaryAction, layout = buttonsLayout)
     }
 }
 
@@ -229,7 +244,11 @@ fun WiomSelectionDialog(
     modifier: Modifier = Modifier,
     body: String? = null,
     secondaryAction: WiomDialogAction? = null,
+    buttonsLayout: WiomDialogButtonsLayout = WiomDialogButtonsLayout.Stacked,
 ) {
+    require(options.size in 1..4) {
+        "Selection dialog supports 1..4 options; for longer lists use a wiom-bottomsheet picker"
+    }
     val colors = WiomTheme.color
     val type = WiomTheme.type
     val spacing = WiomTheme.spacing
@@ -245,23 +264,23 @@ fun WiomSelectionDialog(
                 if (body != null) {
                     Text(
                         text = body,
-                        style = type.bodyLg,
+                        style = type.bodyMd,
                         color = colors.text.subtle,
                     )
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
                 options.forEachIndexed { index, option ->
-                    SelectionRow(
-                        label = option,
-                        selected = index == selectedIndex,
-                        onClick = { onSelect(index) },
+                    WiomListItemRadio(
+                        primary = option,
+                        radioSelected = index == selectedIndex,
+                        onRadioSelect = { onSelect(index) },
                     )
                 }
             }
         }
-        Spacer(modifier = Modifier.height(spacing.xl))
-        DialogActions(primary = primaryAction, secondary = secondaryAction)
+        Spacer(modifier = Modifier.height(spacing.huge))
+        DialogActions(primary = primaryAction, secondary = secondaryAction, layout = buttonsLayout)
     }
 }
 
@@ -281,6 +300,7 @@ fun WiomIllustrationDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     secondaryAction: WiomDialogAction? = null,
+    buttonsLayout: WiomDialogButtonsLayout = WiomDialogButtonsLayout.Stacked,
 ) {
     val colors = WiomTheme.color
     val type = WiomTheme.type
@@ -293,12 +313,15 @@ fun WiomIllustrationDialog(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(spacing.lg),
         ) {
+            // V2 §2: full-width 144 dp container with `radius.large` (16 dp), `bg.brand.subtle`,
+            // 48 dp icon centered. NOT a 120 dp circle — that anatomy lives on the bottom sheet.
             Box(
                 modifier = Modifier
-                    .size(120.dp)
+                    .fillMaxWidth()
+                    .height(144.dp)
                     .background(
                         color = colors.bg.brandSubtle,
-                        shape = RoundedCornerShape(radius.full),
+                        shape = RoundedCornerShape(radius.large),
                     ),
                 contentAlignment = Alignment.Center,
             ) {
@@ -321,14 +344,14 @@ fun WiomIllustrationDialog(
                 )
                 Text(
                     text = subtext,
-                    style = type.bodyLg,
+                    style = type.bodyMd,
                     color = colors.text.subtle,
                     textAlign = TextAlign.Center,
                 )
             }
         }
-        Spacer(modifier = Modifier.height(spacing.xl))
-        DialogActions(primary = primaryAction, secondary = secondaryAction)
+        Spacer(modifier = Modifier.height(spacing.huge))
+        DialogActions(primary = primaryAction, secondary = secondaryAction, layout = buttonsLayout)
     }
 }
 
@@ -365,9 +388,9 @@ fun WiomLoadingDialog(
                 modifier = Modifier.size(40.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(WiomTheme.iconSize.sm),
-                    color = colors.bg.brand,
+                WiomSpinner(
+                    size = WiomSpinnerSize.Sm,
+                    tone = WiomSpinnerTone.Brand,
                 )
             }
             if (title != null || message != null) {
@@ -386,7 +409,7 @@ fun WiomLoadingDialog(
                     if (message != null) {
                         Text(
                             text = message,
-                            style = type.bodyLg,
+                            style = type.bodyMd,
                             color = colors.text.subtle,
                             textAlign = TextAlign.Center,
                         )
@@ -399,99 +422,58 @@ fun WiomLoadingDialog(
 
 // region Internals
 
-/** Stacked, full-width action group (max 2 CTAs) used by every dialog helper. */
+/**
+ * Action group for a Wiom dialog. Stacked (default) or SideBySide per [layout].
+ * 12 dp inter-CTA gap either way; max 2 CTAs.
+ */
 @Composable
 private fun DialogActions(
     primary: WiomDialogAction,
     secondary: WiomDialogAction?,
+    layout: WiomDialogButtonsLayout,
 ) {
     val spacing = WiomTheme.spacing
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(spacing.md),
-    ) {
-        WiomButton(
-            text = primary.label,
-            onClick = primary.onClick,
+    when (layout) {
+        WiomDialogButtonsLayout.Stacked -> Column(
             modifier = Modifier.fillMaxWidth(),
-            type = primary.type,
-        )
-        if (secondary != null) {
+            verticalArrangement = Arrangement.spacedBy(spacing.md),
+        ) {
             WiomButton(
-                text = secondary.label,
-                onClick = secondary.onClick,
+                text = primary.label,
+                onClick = primary.onClick,
                 modifier = Modifier.fillMaxWidth(),
-                type = secondary.type,
+                type = primary.type,
             )
-        }
-    }
-}
-
-@Composable
-private fun SelectionRow(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val colors = WiomTheme.color
-    val type = WiomTheme.type
-    val spacing = WiomTheme.spacing
-    val stroke = WiomTheme.stroke
-    val radius = WiomTheme.radius
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.RadioButton,
-            )
-            .padding(vertical = spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.md),
-    ) {
-        // Filled-state rule: selected radio is brand fill with an inner dot, no border.
-        // Unselected radio is transparent fill with a stroke.medium strong border.
-        if (selected) {
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .background(
-                        color = colors.bg.brand,
-                        shape = RoundedCornerShape(radius.full),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = colors.bg.default,
-                            shape = RoundedCornerShape(radius.full),
-                        ),
+            if (secondary != null) {
+                WiomButton(
+                    text = secondary.label,
+                    onClick = secondary.onClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    type = secondary.type,
                 )
             }
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .background(
-                        color = Color.Transparent,
-                        shape = RoundedCornerShape(radius.full),
-                    )
-                    .border(
-                        width = stroke.medium,
-                        color = colors.stroke.strong,
-                        shape = RoundedCornerShape(radius.full),
-                    ),
+        }
+        WiomDialogButtonsLayout.SideBySide -> Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Wiom button-group convention: dismiss on the left, confirm on the right.
+            if (secondary != null) {
+                WiomButton(
+                    text = secondary.label,
+                    onClick = secondary.onClick,
+                    modifier = Modifier.weight(1f),
+                    type = secondary.type,
+                )
+            }
+            WiomButton(
+                text = primary.label,
+                onClick = primary.onClick,
+                modifier = Modifier.weight(1f),
+                type = primary.type,
             )
         }
-        Text(
-            text = label,
-            style = type.labelLg,
-            color = colors.text.default,
-        )
     }
 }
 

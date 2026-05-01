@@ -17,46 +17,155 @@ Added **MIGRATION.md** — step-by-step adoption guide for app developers: insta
 
 Use this version. **v0.1.0 does not build**; v0.1.1 is the first usable release.
 
-## [Unreleased]
+## [2.0.0] — 2026-05-01
 
-### Added (v1.0.0 work-in-progress)
-- **`WiomPagination`** rewritten against the v1.0.0 element-first tokens and `Icons.Rounded.*` pipeline. Four composables — `WiomPaginationDots` (Simple 8×8 circle / Expanded 24×8 pill active slot, 2–6 slots), `WiomPaginationBars` (2–6 slots, accumulated fill, 4dp tall, `space.xs` gap), `WiomPaginationCounter` ("N / Total" with `Icons.Rounded.ChevronLeft` / `ChevronRight`; chevrons **hide** at bounds behind a 48dp spacer so the label doesn't jump), and `WiomPaginationScrollIndicator` (4dp rail in `bg.muted`, thumb in `bg.brand`, `visibleFraction` default 0.3). Counter labels use `type.labelMd` / `text.subtle` centered.
-- **`WiomStepper`** (v1.0.0) — `WiomStepIndicator` atom (32dp, 4 states: Completed brand-fill + `Icons.Rounded.Check`, Active `bg.default` + 2dp `stroke.brandFocus` ring + brand number, Upcoming `bg.default` + 1dp `stroke.subtle` ring + `text.subtle` number, Error `bg.critical` + `Icons.Rounded.PriorityHigh`); `WiomStepperHorizontal` uses `fillMaxWidth()` (no pinned 360dp) with 2dp connector brand-filled after Completed steps; `WiomStepperVertical` with 32dp rail + 2dp connector, `space.md` rail→content gap, title (`type.labelMd`) + optional description (`type.bodyMd` / `text.subtle`) + optional `action: @Composable () -> Unit` slot that accepts any composable (WiomButton, WiomInput, OTP, tertiary CTA). State derivation (step<current→Completed, ==→Active, >→Upcoming) + optional `stateOverrides: Map<Int, WiomStepState>` for Error.
-- **`WiomInput`** + **`WiomTextarea`** (v1.0.0 rebuild). New `status` axis (`None / Error / Success / Warning`) separated from `enabled` and `readOnly` booleans — a field can be readOnly AND Error at the same time. Status icons auto-populate the trailing slot and override any caller-supplied `trailingIcon`. Border: rest `stroke.small + stroke.subtle`, focus `stroke.medium + stroke.brandFocus`, error `stroke.medium + stroke.criticalFocus`, success `stroke.medium + stroke.positiveFocus`. Container `bg.default` → `bg.subtle` (readOnly) → `bg.disabled`. Padding `space.lg` H × `space.md` V, radius `radius.medium`. Label `type.labelLg`, value `type.bodyLg`, helper + counter `type.bodyMd`. Configuration patterns in README for Phone (India-only — leading phone icon, no `+91` prefix), OTP + timer counter, Search, Currency (`₹` prefix / `.00` suffix), Password (visibility toggle), and the **dropdown-replacement pattern** (`readOnly=true` + `trailingIcon=KeyboardArrowDown` + `onClick` → bottom-sheet picker — when acting as a dropdown trigger the internal BasicTextField is swapped for a plain Text so the row's click handler receives the tap).
-- **`WiomListItem`** rebuilt on the 5-Type hybrid model — `Default` (24dp leading icon + chevron) · `IconWithBg` (new — leading is a `WiomIconBadge`) · `Checkbox` · `Radio` · `Switch`. Exposes a typed wrapper per Type (`WiomListItem`, `WiomListItemIconBadge`, `WiomListItemCheckbox`, `WiomListItemRadio`, `WiomListItemSwitch`) plus a raw `WiomListItemBase` slot API. The selection-control sub-components (`WiomCheckbox` / `WiomRadio` / `WiomSwitch`) and `WiomIconBadge` are consumed via `@Composable () -> Unit` slots — the caller holds `checked` / `tone` state and passes a configured instance, keeping list-item decoupled from the sibling modules. `selected = true` adopts `bg.selected` fill + 8dp `bg.brand` dot on the trailing side (picker-sheet pattern). Padding `space.lg` H × `space.md` V, min height 48dp via `defaultMinSize`. Primary `type.bodyLg` · `text.default`, secondary `type.bodyMd` · `text.subtle`, trailing meta `type.bodyMd` · `text.subtle`.
-- **`WiomBottomSheet`** (v1.0.0 rebuild) — Material3 `ModalBottomSheet` wrapped with Wiom tokens. `bg.default` surface, top `radius.xlarge`, bottom `radius.none`, 32×4dp `stroke.strong` drag handle with `radius.full` + `space.sm` vertical padding, `overlay.scrim`, `navigationBarsPadding()` on content. 8 sizes modelled via `WiomBottomSheetSize` enum (Compact / Half / Expanded / Full / Illustration / IllustrationCta / IllustrationLeft / Share / Form) — list variants set a `heightIn(min)` heuristic, hug-height variants let content drive the height. Helpers: `WiomBottomSheetHeader` (title `type.headingLg` + optional subtitle `type.bodyMd` · `text.subtle` + divider `stroke.small` · `stroke.subtle`), `WiomBottomSheetListItem` (built inline, NOT via `WiomListItem`, so it honors `space.xl` (24dp) horizontal padding — 40dp `bg.brandSubtle` icon circle with `icon.brand` glyph, `type.labelLg` label, `Icons.Rounded.ChevronRight` 20dp `icon.disabled`), `WiomBottomSheetIllustration` (120dp `bg.brandSubtle` circle with 48dp `icon.brand` glyph centered, `type.headingLg` heading + `type.bodyLg`/`text.subtle` subtext, all centered), `WiomBottomSheetActions` (top divider `stroke.small`/`stroke.subtle` + row with `space.xl` H × `space.lg` V padding, `space.md` gap between children). `@Preview` for each of the 9 enum values.
-- **`WiomDialog`** (v1.0.0 rebuild) — Material3 `Dialog` wrapped with Wiom tokens. 312 dp fixed width, `bg.default`, `radius.xlarge`, `shadow.xl` paired with `overlay.scrim` (auto via `Dialog`), `space.xl` padding. 5 typed helpers covering every variant from the V2 skill: `WiomAlertDialog` (optional 48dp `bg.brandSubtle` icon badge, left-aligned `type.headingMd` title + `type.bodyLg`/`text.subtle` body, `space.huge` (48dp) main-to-buttons gap per Alert-only rule), `WiomInputDialog` (single-field content slot, `space.xl` main-to-buttons gap), `WiomSelectionDialog` (inline radio rows honoring filled-state rule — selected = `bg.brand` fill + `bg.default` inner dot, unselected = transparent + `stroke.medium` `stroke.strong` border; intended for ≤4 options), `WiomIllustrationDialog` (120dp `bg.brandSubtle` circle + 48dp `icon.brand` glyph centered, same illustration anatomy as the bottom sheet), `WiomLoadingDialog` (non-dismissible — `dismissOnBackPress = false`, `dismissOnClickOutside = false` — 20dp `CircularProgressIndicator` tinted `bg.brand` inside a 40dp frame, optional title + message centered). `WiomDialogAction(label, onClick, type: WiomButtonType = Primary)` data class maps to `WiomButton` types; actions are always rendered stacked full-width with `space.md` gap, max 2 CTAs per group.
-- **`WiomLoader`** (v1.0.0 from `wiom-loader` skill) — `WiomSpinner` (Sm 20dp · Md 32dp · Lg 48dp × Brand/Neutral/OnColor tones; Canvas-drawn 270° arc rotating at 900ms with round caps); `WiomSkeletonLine` (16dp body-height bar, `bg.muted` + optional `bg.default` shimmer sweep on a 1.2s linear loop), `WiomSkeletonCard` (72dp thumbnail + 3 lines inside a `bg.default` card, `radius.large`), `WiomSkeletonListItem` (40dp circular avatar + 2 lines + trailing meta); `WiomBlockingLoader` (Light = `bg.default`, OnBrand = `bg.brand`, Overlay = `overlay.scrim` — all swallow pointer events, pair `Icons.Rounded.AllInclusive` as the canonical infinity stand-in, Lg spinner, optional `type.bodyMd` message). Status (Wait → Success/Error) ring and typing dots deferred.
-- **`WiomToast`** (v1.0.0 from `wiom-toast` skill) — 5 statuses: `Neutral` (`bg.inverse` + `text.inverse`), `Positive` (`bg.positiveSubtle` + `icon.positive`, body `text.default`), `Critical` (`bg.criticalSubtle` + `icon.critical`, body `text.default`), `Warning` (`bg.warningSubtle` + `icon.warning`, body and action share `text.onWarning`), `Info` (`bg.infoSubtle` + `icon.info`, body `text.default`). `radius.medium`, `shadow.lg`, `space.lg` padding, `space.md` icon→body gap, body `type.bodyMd` max 2 lines, action label `type.labelLg`. Ships with `WiomToastHost` + `WiomToastState` + `rememberWiomToastState()` pattern: unbounded queue, max 1 visible, 300ms slide+fade enter/exit, `DURATION_SHORT = 2000ms` / `DURATION_LONG = 8000ms` / `null` = persistent. Close X appears when `onClose` (direct call) or `showClose = true` (via `WiomToastMessage`). Action tap auto-dismisses the current toast before invoking the callback.
-- **`WiomProgressIndicator`** (v1.0.0 from `wiom-progress-indicator` skill) — `WiomLinearProgress` determinate bar with `WiomLinearProgressSize` (Small 4dp default / Medium 8dp); `WiomLinearProgressIndeterminate` with a 25% head sweeping across the track on a 1.4s linear loop; `WiomCircularProgress` determinate arc with `WiomCircularProgressSize` (Small 24dp / Large 48dp) and round stroke caps; `WiomCircularProgressIndeterminate` 270° rotating arc at 1.2s per turn. All four accept `WiomProgressTone` (Brand / Info / Positive). Track = `bg.muted`; fill/arc = `bg.brand` / `bg.info` / `bg.positive`. `radius.full` on linear. No border or shadow. Warning/Critical tones intentionally excluded — those colors are reserved for Attention states, not forward motion.
+Full rebuild against the Wiom DS V2 skill set (locked SHA `ed110b6` from
+`github.com/abhishekgarg-wiom/wiom-design-system`). Every component re-derived from V2
+ship values; many V1 drifts corrected. **15 components** (Stepper dropped — no V2
+upstream skill yet). Element-first tokens throughout.
 
-### Flagged — foundation gaps
-- No `stroke.warningFocus` token. `WiomInput(status = Warning)` currently borrows
-  `stroke.brandFocus` for the border; helper text uses `text.onWarning` and the trailing
-  icon uses `icon.warning`, so the warning state is still identifiable. Tracked for a
-  foundation update.
+**Post-Phase-7 sweep — 4 gap closures:**
+- `WiomChip` Disabled state (skill §3.2): `bg.disabled` fill, no border, `text.disabled` label, close glyph hidden, click suppressed.
+- `WiomPaginationScrollIndicator` `LazyListState` overload (skill §8): derives thumb size + offset from `listState.layoutInfo`; thumb floor at 10 % so it stays readable on long rails.
+- `WiomNavItem` adds optional `iconSelected: ImageVector? = null` (skill §7 outline → filled glyph swap on Selected). Falls back to `icon` so callers without a separate filled glyph see the same icon in both states.
+- `WiomTopBar(isDarkVariant: Boolean = false)` parameter added (skill §6). Dark variant uses `bg.brand.bold` + `text.inverse` + `icon.inverse` for premium / partner headers. Subtitle and Search state are guarded out on dark variant (no dimmed-inverse text token, no inverse-translucent pill fill). New `WiomTopBarStatusBar(isDarkVariant)` Composable pairs the OS status bar with the bar (light icons on dark / dark icons on light) per skill §6 — call once per screen after `enableEdgeToEdge`.
 
-### Flagged — skill drift (Loader / Toast / Progress Indicator build)
-- `wiom-toast` says Info uses `bg.muted` + `icon.nonAction`. Foundation-correct is
-  `bg.infoSubtle` + `icon.info` (deliverable spec). Foundation wins.
-- `wiom-toast` quotes Warning subtle hex as `#FFE9A1`; foundation
-  `bg.warningSubtle = #FFF2BF`. Token used; skill hex discarded.
-- `wiom-toast` radius = 8dp (`radius-small`); deliverable = 12dp (`radius.medium`). Deliverable wins.
-- `wiom-toast` body color on Critical: skill says `text.default` (matches CLAUDE.md § 6);
-  deliverable spec restates this explicitly. No drift, documented for clarity.
-- `wiom-loader` uses legacy dotted `bg.brand.subtle` path; foundation exposes camelCase
-  `bg.brandSubtle`. Same color.
-- `wiom-loader` Brand loader wants a bespoke Figma infinity vector (node `2068:48`).
-  Substituted `Icons.Rounded.AllInclusive` until a branded drawable is added to `res/drawable/`.
-- `wiom-progress-indicator` does not cover circular progress (circular loading lives
-  in Loader/Spinner and Loader/Status). Circular determinate + indeterminate added here
-  to satisfy the v1.0 deliverable brief; skill authors should absorb in next refresh.
-- `wiom-progress-indicator` recommends a reversed-semantics color ladder (info <35% →
-  brand 35–80% → positive >80%). Library exposes `WiomProgressTone` as an explicit
-  caller choice rather than auto-laddering on `progress` — appropriate tone depends on
-  context (a long install vs a short upload).
+**Breaking changes** — see per-phase notes below for the complete diff. A non-exhaustive
+summary:
+- **WiomToast**: dropped `Neutral` status; all 4 types share `bg.default`; padding 16/12;
+  message `bodyLg`; action always `text.brand`.
+- **WiomBottomSheet**: dropped `IllustrationCta` enum; illustration block uses
+  `WiomIconBadge.Lg`; header typography swap (`headingMd` / `bodySm`); action bar drops
+  the top divider.
+- **WiomDialog**: `dismissOnClickOutside` default flipped to `false`; body text style
+  unified at `bodyMd`; main → buttons gap `space.huge` for **all 5** variants;
+  illustration is a 144 dp full-width rect with `radius.large` (was a 120 dp circle);
+  Selection rows use `WiomListItemRadio`; Loading uses `WiomSpinner`; new
+  `WiomDialogButtonsLayout { Stacked, SideBySide }`.
+- **WiomListItem**: API switched to `state: WiomListItemState` (was `enabled: Boolean`);
+  `WiomListItemIconBadge` renamed to `WiomListItemIconBg`; trailing chevron tint switched
+  to `icon.brand`; selected dot dropped; pressed-overlay added (Pressed XOR Selected).
+- **WiomBadge**: count tones include `Neutral`; default cap raised to 99.
+- **WiomSelectionControl**: bounding box 24×24 (was 20×20); glyph `iconSize.md`.
+- **WiomLoader**: `WiomBlockingLoader` → `WiomBrandLoader`; new `WiomLinearProgress`
+  loader-sibling and `WiomDots` typing-indicator.
+- **WiomNavigationBar / WiomTopBar**: edge-to-edge contract — both consume their OS
+  insets via `navigationBarsPadding()` / `statusBarsPadding()`; top-bar heights locked
+  per Size variant.
+- **WiomTabsFilters**: typography unified to `labelMd` across states; underline indicator
+  uses `bg.brand` (element-first); chip Selected has the 1 dp brand border (per Figma
+  ship) and a trailing 16 dp close glyph.
+- **WiomPagination**: inactive tint switched to `bg.muted`; counter renders both
+  chevrons with availability-based tinting (no more hide-with-Spacer); counter label
+  `text.default`.
+- **NEW components**: `WiomOtp` (boxed verification-code field), `WiomLinearProgress`
+  (loader-sibling, separate from `WiomProgressIndicator`'s linear), `WiomDots` (chat
+  typing indicator).
 
-### Planned
+**Dropped** — `WiomStepper` (no V2 upstream skill); `WiomDropdown` (deleted in v1.0.0,
+stays gone — use `WiomInput(readOnly = true)` + chevron + `WiomBottomSheet` picker).
+
+### v2.0.0 rebuild — Phase 6 (Indicators)
+
+**`WiomTabsFilters` (`wiom-tabs-filters` skill)**
+- Pill Tab labels now use `type.label.md` for **both states** (skill §1.1 — pill tabs aren't body text). Was `labelMd` for selected, `bodyMd` for inactive.
+- Pill Tab selected text colour switched to `text.selected` (semantic name) — same hex as `text.brand` but the canonical token for selected-state text.
+- Pill Tab track no longer adds an extra inter-item gap on top of the `space-4` track padding (skill §1.1: items butt up against each other within the track; the radius isolates them visually).
+- Underline Filter indicator now uses `bg.brand` (the element-first fill token) instead of `stroke.brandFocus` per skill §2.2 — "indicator is a 2 dp filled bar — a `bg.*` slot, not a `stroke.*` one".
+- Underline Filter indicator now fills the item width even in scroll mode (skill §2.1 — "Indicator width: Fills item width"). The V1 `hugContent`-text-wrap branch is gone.
+- Underline Filter labels use `type.label.md` for **both states** (skill §2.1).
+- Underline Filter content padding corrected to `space.lg` H × `space.md` V (16/12) per skill §2.1.
+- Chip Selected now ships with a 1 dp brand border per skill §3.2 ship value (the V1 "filled-state-rule, no border" was a Figma description error — Figma actually ships the border).
+- Chip labels use `type.label.md` (SemiBold) for **all states** per skill §3.2 ship value (V1 used `bodyMd` Regular for unselected — Figma description was wrong).
+- Chip Selected now renders a trailing 16 dp close ✕ in `icon.brand` per skill §3.1 (V1 had no close glyph).
+
+**`WiomPagination` (`wiom-pagination` skill)**
+- All inactive dot / bar tints switched from `stroke.subtle` to **`bg.muted`** per skill §5 (skill §10 explicitly corrects the V1 drift). Same change applies to `WiomPaginationDots`, `WiomPaginationBars`, and the existing scroll-indicator track which already used `bg.muted`.
+- `WiomPaginationCounter` now **always renders both chevrons** per skill §6 rule 4 — at boundaries, the unavailable chevron tints to `icon.disabled` and consumes taps as a no-op (was hidden behind a 48 dp Spacer). The chevron footprint stays constant across page transitions.
+- Tappable chevron tint switched to `icon.action` (was `icon.nonAction`) per skill §2 — chevrons in the counter are tappable chrome.
+- Counter label colour switched to `text.default` per skill §5 — full contrast since it's the only text in the control (was `text.subtle`).
+
+**`WiomProgressIndicator` (`wiom-progress-indicator` skill)**
+- Existing helpers retained: `WiomLinearProgress` (Sm 4 dp / Md 8 dp · Brand / Info / Positive), `WiomLinearProgressIndeterminate`, `WiomCircularProgress`, `WiomCircularProgressIndeterminate`.
+- **NEW** `WiomProgressCompletion` — rich completion meter per skill §1.2. Title (`labelMd`) + right-aligned value (`bodySm`) + status pill (`metaXs` with 6 dp brand-tinted dot) + Linear Md bar. State enum `WiomProgressCompletionState { JustStarted (20% · info · "Just started") · InProgress (60% · brand · "In progress") · AlmostThere (88% · positive · "Almost there") · Complete (100% · positive · "Complete") }` drives fill %, fill colour, and pill copy in lockstep.
+- **NEW** `WiomProgressMilestones` — multi-stage tracker per skill §1.3. 2..5 named stages (`WiomMilestoneStage(label, icon)`); reached circles `bg.brand` + `icon.inverse`, unreached `bg.muted` + `icon.nonAction`; connector colour reflects whether the next stage was reached; per-stage label colour past=`text.default` / current=`text.brand` / future=`text.subtle`. Title `labelLg`, subtitle `bodySm`, label row `metaXs` centred under each circle.
+
+### v2.0.0 rebuild — Phase 5 (Surfaces)
+
+**`WiomNavigationBar` (`wiom-navigation-bar` skill)**
+- Bar padding contract corrected per skill §2: top 0, bottom `space.md` (12 dp), no horizontal padding on the bar — items own their `space.xs H × space.sm V` padding.
+- Bar now consumes the OS gesture / 3-button-bar inset via `navigationBarsPadding()`, so the container fill reads as continuous with the OS strip.
+- Critical badge offset to `+2 dp` outside the icon's top-right (skill §2 anatomy).
+
+**`WiomTopBar` (`wiom-top-bar` skill)**
+- Bar consumes the status-bar inset via `statusBarsPadding()` so the surface reads as continuous with the OS strip.
+- Heights locked per Size variant: Small 64 dp, Medium 112 dp, Large 152 dp. Action row inside Medium/Large is 48 dp.
+- Search pill rebuilt: `space.lg` H × `space.sm` V padding, `space.md` gap between leading icon and field, 20 dp leading icon. The pill now wraps a real `BasicTextField` (was display-only with `@Suppress("UNUSED_EXPRESSION") onQueryChange`).
+- Search state outer padding now asymmetric (`xs` start, `lg` end) per skill §2.
+- Medium/Large title areas now use `weight(1f)` inside the fixed-height column with `Alignment.BottomStart` so the title sits where the skill anatomy diagrams place it.
+
+**`WiomDialog` (`wiom-dialog` skill)**
+- `dismissOnClickOutside` default flipped to `false` (skill §3 — scrim tap never dismisses).
+- All dialog body / subtext text style switched from `bodyLg` (16/24) to `bodyMd` (14/20) — skill §2 specifies `type.body.md` for dialog body across every variant.
+- Main → buttons gap is `space.huge` (48 dp) for **all 5 variants**. Input / Selection / Illustration helpers were on `space.xl` (24 dp); skill §2 explicitly corrects that drift.
+- Illustration container is now a full-width 144 dp rectangle with `radius.large` (16 dp), per skill §2. Was a 120 dp circle (V1 anatomy that lives on the bottom sheet).
+- Selection rows now render via `WiomListItemRadio` (Phase 4) instead of an inline `SelectionRow` — skill §2 says use `wiom-list-item` Type=Radio. Inline `SelectionRow` deleted.
+- Loading dialog spinner now uses `WiomSpinner` (Phase 2) instead of Material's `CircularProgressIndicator` — skill §2 specifies `wiom-loader` Type=Spinner, size=md, color=brand.
+- New `WiomDialogButtonsLayout { Stacked, SideBySide }` — every helper now exposes a `buttonsLayout` parameter. SideBySide places dismiss on the left and confirm on the right via `Modifier.weight(1f)` per Wiom button-group convention.
+
+**`WiomBottomSheet` (`wiom-bottomsheet` skill)**
+- `IllustrationCta` enum value dropped — V2 ships `Illustration` + `IllustrationLeft` (no separate `IllustrationCta`).
+- Header rebuilt to skill §2: padding `8T · 16R · 16B · 16L`, slot gap `space.md`, title `headingMd` (was `headingLg`), subtitle `bodySm` (was `bodyMd`). New optional `leadingIcon` + `trailingActionLabel`/`onTrailingActionClick` slots.
+- Action Bar drops the top divider and switches to `pb-16 · px-16 · pt-0` padding per skill §5 ("no top border on Action Bar — Content's pb-48 is the loose-gap separator").
+- Illustration block rebuilt: now uses `WiomIconBadge.Lg` (96 dp, tone-swappable) instead of an inline 120 dp circle. Heading `headingMd` (was `headingLg`), subtext `bodyMd` (was `bodyLg`); padding `pt-16 · pb-48 · px-16`. New `tone` parameter resolves to `bg.{tone}.subtle` + `icon.{tone}` via `WiomIconBadgeTone`. `leftAligned = true` switches the layout to a Row (replaces the duplicate `IllustrationLeft` preview helper).
+
+**`WiomToast` (`wiom-toast` skill)**
+- Dropped `WiomToastStatus.Neutral` (the V1 inverse-surface variant). V2 ships only 4 status types — `Critical · Warning · Info · Positive`.
+- All four types now share `bg.default` per skill §3 (was per-type tinted backgrounds — `bg.criticalSubtle`, `bg.warningSubtle`, etc.). Only the leading icon (and Warning's body text via `text.onWarning`) carries the type's status colour.
+- Container radius `radius.medium` → `radius.small` (8 dp) per skill §2.
+- Container padding `space.lg` all sides → `space.lg H × space.md V` (16/12) per skill §2.
+- Message text style `bodyMd` (14 sp) → `bodyLg` (16 sp) per skill §2.
+- Action label colour is now **always `text.brand`**, regardless of toast type. Was per-type — V1 used `text.onWarning` for Warning and `text.inverse` for the (now-deleted) Neutral.
+- Close-icon tint always `icon.action` (was `visuals.iconTint`, which would render the close glyph in the type's status colour — wrong for Critical / Positive types).
+- Preview gutters bumped from `space.sm` (8 dp) to `space.lg` (16 dp) — V2 toast aligns to the standard 16 dp gutter (skill §10 explicitly corrects the V1 "344 / 8 dp floating surface" drift).
+
+### v2.0.0 rebuild — Phase 4 (List patterns)
+
+**`WiomListItem` (`wiom-list-item` skill) — full rewrite**
+- Trailing chevron tint switched from `icon.action` (neutral) to **`icon.brand`** (pink) per skill §5 — the chevron is the row's tap-affordance signal, not a generic accent. Disabled chevron stays `icon.disabled`.
+- Removed the V1 selected dot (8 dp `bg.brand` circle in trailing slot). Selected = full-row `bg.selected` overlay only, per skill.
+- Removed the auto-hide of the chevron when `selected = true` — the picker recipe passes `showTrailingChevron = false` explicitly.
+- Added Pressed-state overlay via `MutableInteractionSource` + `collectIsPressedAsState`. **Pressed XOR Selected** — Selected wins per skill §6 rule 7.
+- Outer padding corrected to 16 dp on all sides (was 16 H × 12 V).
+- Vertical alignment is `Alignment.CenterVertically` always — no longer flips to `Top` when `secondary` is set.
+- API: `enabled: Boolean` → `state: WiomListItemState` enum (`Default` / `Disabled`). Disabled is foundations Pattern A (token swap), never opacity.
+- API: `WiomListItemIconBadge` renamed to **`WiomListItemIconBg`** to match skill enum value (`WiomListItemType.IconBg`). Now takes `leadingIcon: ImageVector` + `leadingTone: WiomIconBadgeTone` directly and instantiates `WiomIconBadge` internally — caller no longer needs to assemble the slot.
+- API: `WiomListItemCheckbox` / `Radio` / `Switch` helpers now accept `selection` / `radioSelected` / `checked` + their callbacks directly; the helpers instantiate `WiomCheckbox` / `WiomRadio` / `WiomSwitch` (with `onToggle = null` so the row tap is the source of truth).
+- IconBg disabled state synthesises Pattern A locally: `bg.disabled` circle + `icon.disabled` glyph (since `WiomIconBadge` ships no Disabled tone).
+- `WiomListItemBase` slot API kept for custom rows (avatars, nested badges) — uses the same `state` enum.
+
+### v2.0.0 rebuild — Phase 3 (Form atoms)
+
+**`WiomButton` (`wiom-cta` skill)**
+- Fixed CTA label centering bug — outer `Box` now uses `contentAlignment = Alignment.Center` so the hugging inner `Row` sits in the middle of the `fillMaxWidth()` container instead of the top-start corner.
+- Loading spinner sized to `iconSize.md` (24 dp) per skill anatomy — was `iconSize.sm` (20 dp).
+- `WiomAcknowledge` rebuilt on top of `WiomCheckbox` (24 dp from Phase 2) instead of the inline `AcknowledgeIndicator` (20 dp). Row alignment corrected to `Alignment.Top` per skill §9, label promoted from `bodyMd` → `labelLg`. Disabled state stops dimming the whole row — only the checkbox softens to `stroke.subtle`, label stays `text.default` per skill §4.6.
+
+**`WiomInput` (`wiom-input-fields` skill)**
+- Warning border now uses `stroke.warning` (gold) — Phase 1 added the soft `stroke.warning` token, so the v1.x `stroke.brandFocus` substitute is gone.
+- Cursor uses `text.default` (skill §8) — was `stroke.brandFocus`.
+- Search preview cancel icon corrected to `Icons.Rounded.Close` — was `Icons.Rounded.Error`.
+- Removed the fake "OTP via Input + counter" preview — OTP now has its own component per skill §10 anti-pattern #2.
+
+**`WiomOtp` (new — `wiom-input-fields` skill §6 / §8)**
+- Boxed verification-code field. Single `BasicTextField` receives input; `decorationBox` renders 4 or 6 box children with `weight(1f)` so the row owns the width and the boxes scale with the parent.
+- States: `Default` / `Focused` (active digit's box gets `stroke.medium` `stroke.brandFocus`; resting boxes `stroke.small` `stroke.subtle`) / `Filled` / `Error` / `Success` / `Disabled`.
+- Helper row carries an optional right-aligned `timer` (e.g., `"00:24"`) per skill — Focused-variant timer is hardcoded in Figma but exposed in code as a string the caller drives from a countdown.
+- Padding `space.md` H × `space.md` V, radius `radius.medium`, digit style `type.labelLg` (16/24 SemiBold) so the wrap lands at the skill's 48 dp height.
+
+### Planned (v2.1+)
+- Reinstate `WiomStepper` once an upstream skill exists in `wiom-design-system`
+- `Loader/Status` ring (Wait → Success → Error) — skill §wiom-loader, deferred since V1
 - Standard (non-modal, persistent) bottom sheet
 - Google Fonts provider for Noto Sans
 - Paparazzi screenshot testing

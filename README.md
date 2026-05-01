@@ -3,7 +3,7 @@
 Jetpack Compose library for the Wiom apps.
 
 - **Foundations:** element-first tokens (`bg.*`, `text.*`, `stroke.*`, `icon.*`), Noto Sans via Google Fonts, Material 3 Icons Rounded.
-- **16 components** covering the V2 skill set.
+- **15 components** covering the V2 skill set.
 - **Adoption Kit** — Detekt rules + PR/ADR templates + drop-in CLAUDE.md for consumer repos.
 
 ---
@@ -22,9 +22,9 @@ dependencyResolutionManagement {
 
 // app/build.gradle.kts
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.4")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v2.0.0")
     // Enforce the design system in CI — see ADOPTION.md
-    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v1.0.4")
+    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v2.0.0")
 }
 ```
 
@@ -84,7 +84,6 @@ WiomIcon(Icons.Rounded.Search, contentDescription = "Search", tint = WiomTheme.c
 | `WiomNavigationBar` | Bottom nav — 2–5 items, badge support |
 | `WiomPillTabs` / `WiomUnderlineFilter` / `WiomChip` | 3-level filter system |
 | `WiomPagination` (Dots / Bars / Counter / ScrollIndicator) | Position indicator |
-| `WiomStepper` (Horizontal / Vertical) | Known 2–6 step sequence with per-step action slot |
 | `WiomBottomSheet` | 8 sizes via enum + content helpers |
 | `WiomDialog` | Alert / Input / Selection / Illustration / Loading |
 | `WiomLoader` | Spinner / skeleton / full-screen |

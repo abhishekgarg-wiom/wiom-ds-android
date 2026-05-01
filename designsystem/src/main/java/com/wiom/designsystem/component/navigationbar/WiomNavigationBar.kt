@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -22,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,12 +38,19 @@ import com.wiom.designsystem.theme.WiomTheme
  * Descriptor for a single item in the [WiomNavigationBar].
  *
  * @param label one word — keep it short (e.g. "Home", "Plans"). `type.labelSm`.
- * @param icon `Icons.Rounded.*` image vector. Filled automatically via Material Rounded.
+ * @param icon `Icons.Rounded.*` image vector for the **default** (unselected) state.
+ * @param iconSelected optional override for the **selected** state. Skill §7 calls for an
+ *   outline → filled glyph swap on selection (Material Rounded ships only one glyph per
+ *   metaphor, so consumers supply the filled sibling here as `painterResource(R.drawable.ic_*_rounded_filled)`
+ *   wrapped via `rememberVectorPainter` if needed). Pass `null` (default) to keep the same
+ *   glyph in both states — fine when the brand-pink pill + label colour change carry the
+ *   selection signal on their own.
  * @param hasBadge whether to show a critical dot at the top-end of the icon.
  */
 data class WiomNavItem(
     val label: String,
     val icon: ImageVector,
+    val iconSelected: ImageVector? = null,
     val hasBadge: Boolean = false,
 )
 
@@ -81,16 +90,12 @@ fun WiomNavigationBar(
                     end = Offset(size.width, 0f),
                     strokeWidth = topBorderPx,
                 )
-            },
+            }
+            .navigationBarsPadding()
+            .padding(bottom = WiomTheme.spacing.md),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = WiomTheme.spacing.xs,
-                    vertical = WiomTheme.spacing.sm,
-                ),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             items.forEachIndexed { index, item ->
@@ -114,9 +119,8 @@ private fun NavItem(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(WiomTheme.radius.small))
             .clickable(onClick = onClick)
-            .padding(vertical = WiomTheme.spacing.xs),
+            .padding(horizontal = WiomTheme.spacing.xs, vertical = WiomTheme.spacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs),
     ) {
@@ -134,16 +138,18 @@ private fun NavItem(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            // Icon with optional badge dot in the top-end corner.
+            // Icon with optional badge dot at +2 dp outside the icon's top-right.
             Box {
                 WiomIcon(
-                    imageVector = item.icon,
+                    imageVector = if (selected) (item.iconSelected ?: item.icon) else item.icon,
                     contentDescription = item.label,
                     tint = if (selected) WiomTheme.color.icon.brand else WiomTheme.color.icon.nonAction,
                 )
                 if (item.hasBadge) {
                     Box(
-                        modifier = Modifier.align(Alignment.TopEnd),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 2.dp, y = (-2).dp),
                     ) {
                         WiomBadgeDot(tone = WiomBadgeDotTone.Critical)
                     }

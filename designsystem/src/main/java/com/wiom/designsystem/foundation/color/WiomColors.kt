@@ -3,18 +3,21 @@ package com.wiom.designsystem.foundation.color
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.wiom.designsystem.foundation.color.WiomColorPrimitives as P
 
 /**
  * Wiom colors — element-first semantic tokens.
  *
  * Four namespaces mapped 1:1 to Compose slots:
- *  - [Bg]      → Modifier.background(...), Surface(color=...), Box(background=...)
- *  - [Text]    → Text(color=...)
- *  - [Stroke]  → Modifier.border(...), BorderStroke(...), Divider
- *  - [Icon]    → Icon(tint=...)
+ *   - [Bg]      → Modifier.background(...), Surface(color=...), Box(background=...)
+ *   - [Text]    → Text(color=...)
+ *   - [Stroke]  → Modifier.border(...), BorderStroke(...), Divider
+ *   - [Icon]    → Icon(tint=...)
  *
- * Never use raw hex in UI code. Legacy role-first tokens (`color.brand.primary`,
- * `color.warning.primary`) are GONE — element-first is the only API.
+ * Plus [Overlay] (the single `scrim` for modal backdrops).
+ *
+ * Never use raw hex in feature code. All values resolve from [WiomColorPrimitives]
+ * (internal) — feature code accesses semantic tokens only.
  */
 @Immutable
 data class WiomColors(
@@ -26,151 +29,167 @@ data class WiomColors(
 ) {
     @Immutable
     data class Bg(
-        val default: Color,           // #FAF9FC — page / card / input / sheet
-        val subtle: Color,            // #F1EDF7 — hover tint, disabled fill, section cards
-        val muted: Color,             // #E8E4F0 — grouped sections, alt rows
-        val inverse: Color,           // #161021 — dark hero / preview / footer
-        val selected: Color,          // #FFCCED (Brand_200) — active chip / current row / selected tab
-        val disabled: Color,          // #D7D3E0 — disabled component fill
-        val brand: Color,             // #D9008D (Brand_600) — Primary CTA, brand emphasis
-        val brandHover: Color,        // #C00080 — Primary hover
-        val brandPressed: Color,      // #A30070 — Primary pressed
-        val brandSubtle: Color,       // #FFE5F6 — brand-tinted cards, secondary pressed
-        val brandBold: Color,         // #443152 (Brand_900) — premium / partner header
-        val brandAccent: Color,       // #FF66C9 (Brand_400) — Pre-booking CTA
-        val brandAccentPressed: Color,// #EA5DB8
-        val critical: Color,          // #D92130 — Destructive CTA
-        val criticalHover: Color,     // #BF1D2A
-        val criticalPressed: Color,   // #A31824
-        val criticalSubtle: Color,    // #FFE5E7 — error banner
-        val positive: Color,          // #008043
-        val positiveSubtle: Color,    // #E1FAED — success banner
-        val warning: Color,           // #FFDA40 (Warning_300 gold) — warning fill (yellow, never orange)
-        val warningSubtle: Color,     // #FFF2BF — warning banner
-        val info: Color,              // #6D17CE
-        val infoSubtle: Color,        // #F1E5FF
+        // Neutrals
+        val default: Color,           // page / card / input / sheet
+        val subtle: Color,            // hover tint, section cards, shimmer
+        val muted: Color,             // grouped sections, skeleton fills
+        val disabled: Color,          // disabled component fill
+        val inverse: Color,           // dark hero / preview / footer
+        val selected: Color,          // active chip / current row / selected tab
+        // Brand (non-action surfaces)
+        val brandSubtle: Color,       // soft brand surface · Secondary/Tertiary CTA pressed fill
+        val brandBold: Color,         // premium / partner header (non-action)
+        // Status (non-action surfaces)
+        val positiveSubtle: Color,    // success banner / card bg
+        val positive: Color,          // solid success fill (badge / chip)
+        val criticalSubtle: Color,    // error banner / card bg
+        val warningSubtle: Color,     // warning banner / card bg — pairs with text.onWarning (8.76:1 AA)
+        val warning: Color,           // solid warning fill (badge / chip) — pairs with text.onWarning (7.16:1 AA). Yellow gold, never orange.
+        val infoSubtle: Color,        // info banner / card bg
+        val info: Color,              // solid info fill (badge)
+        // Brand action surfaces
+        val brand: Color,             // Primary CTA fill
+        val brandHover: Color,        // Primary hover
+        val brandPressed: Color,      // Primary pressed
+        val brandAccent: Color,       // Pre-booking CTA fill (customer app only)
+        val brandAccentPressed: Color,
+        // Critical action surfaces (destructive only)
+        val critical: Color,          // Destructive CTA fill
+        val criticalHover: Color,
+        val criticalPressed: Color,
     )
 
     @Immutable
     data class Text(
-        val default: Color,           // #161021 — primary reading text
-        val subtle: Color,            // #5C5570 — description, metadata, helper
-        val disabled: Color,          // #A7A1B2 — disabled text + input placeholder (one token, two uses)
-        val inverse: Color,           // #FAF9FC — on dark surfaces
-        val brand: Color,             // #D9008D — Secondary/Tertiary CTA text, inline link
-        val brandHover: Color,        // #C00080
-        val onBrand: Color,           // #FFFFFF — on bg.brand
-        val onBrandAccent: Color,     // #161021 — on bg.brandAccent (bright pink needs DARK label for AA)
-        val critical: Color,          // #D92130 — error heading, inline error
-        val onCritical: Color,        // #FFFFFF — on bg.critical
-        val positive: Color,          // #008043 — success heading
-        val onPositive: Color,        // #FFFFFF — on bg.positive
-        val onWarning: Color,         // #372902 — THE warning text token. Valid on bg.warning, bg.warningSubtle, AND bg.default (no separate text.warning exists)
-        val info: Color,              // #6D17CE — info heading, info link
-        val onInfo: Color,            // #FFFFFF — on bg.info
-        val selected: Color,          // #D9008D — text/icon on bg.selected
+        val default: Color,           // primary reading text on light surfaces (NOT warning surfaces)
+        val subtle: Color,            // descriptions, metadata, helper, placeholder copy via text.disabled
+        val disabled: Color,          // disabled text + input placeholder (one token, two sanctioned uses)
+        val inverse: Color,           // text on dark surfaces (bg.inverse, bg.brand.bold)
+        val selected: Color,          // selected tab label, active chip, current nav
+        val brand: Color,             // Secondary/Tertiary CTA text, inline link
+        val brandHover: Color,        // hover state for brand-tinted text
+        val onBrand: Color,           // text on bg.brand (Primary CTA label) — #FFFFFF, distinct from icon.inverse
+        val onBrandAccent: Color,     // text on bg.brand.accent — DARK because bright pink fails AA with white
+        val critical: Color,          // error heading, inline error, required asterisk
+        val onCritical: Color,        // text on bg.critical (Destructive CTA label)
+        val positive: Color,          // success heading
+        val onPositive: Color,        // text on bg.positive
+        val onWarning: Color,         // THE warning text token. Valid on bg.warning (7.16:1), bg.warningSubtle (8.76:1), AND bg.default (14.18:1). No separate text.warning exists — warning is a one-token family.
+        val info: Color,              // info heading, info link
+        val onInfo: Color,            // text on bg.info
     )
 
     @Immutable
     data class Stroke(
-        val subtle: Color,            // #D7D3E0 — card outline, input rest border
-        val default: Color,           // #E8E4F0 — inner divider, lighter separator
-        val strong: Color,            // #473F55 — small-control rest border (checkbox/radio/switch unchecked)
-        val selected: Color,          // #D9008D — selected card/chip border (= stroke.brand.focus)
-        val brandFocus: Color,        // #D9008D — keyboard focus ring · Secondary CTA rest border · active input
-        val criticalFocus: Color,     // #D92130 — invalid input · destructive focus
-        val positiveFocus: Color,     // #008043
-        val warningFocus: Color,      // #E2B203 (Warning_300 gold) — warning-state input border
-        val infoFocus: Color,         // #6D17CE
+        // Neutrals
+        val subtle: Color,            // card outlines, input rest border
+        val default: Color,           // inner-card divider, lighter separator
+        val strong: Color,            // small-control rest border (checkbox/radio/switch unchecked)
+        val selected: Color,          // selected card/chip border (= stroke.brand.focus)
+        // Brand
+        val brand: Color,             // soft decorative brand border (Brand_300)
+        val brandFocus: Color,        // saturated — Secondary CTA rest border, keyboard focus ring
+        // Status outlines (soft) + focus rings (saturated)
+        val positive: Color,          // success card outline (soft)
+        val positiveFocus: Color,     // focus ring on positive elements
+        val critical: Color,          // error outline (soft)
+        val criticalFocus: Color,     // invalid input · destructive focus
+        val warning: Color,           // warning outline (saturated gold) — inside bg.warningSubtle only. No separate stroke.warningFocus — warning has no focus state.
+        val info: Color,              // info card outline (soft)
+        val infoFocus: Color,         // focus ring on info elements
     )
 
     @Immutable
     data class Icon(
-        val action: Color,            // #352D42 (Neutral_900) — tappable chrome icons (back, close, menu, filter)
-        val nonAction: Color,         // #898296 (Neutral_500) — decorative / non-tappable icons, passes AA (3.48:1 on bg.default)
-        val inverse: Color,           // #FFFFFF — on colored CTA fills (Primary / Destructive)
-        val brand: Color,             // #D9008D — Secondary/Tertiary CTA icons
-        val critical: Color,          // #D92130
-        val positive: Color,          // #008043
-        val warning: Color,           // #E2B203 — ONLY on bg.warning/bg.warningSubtle surfaces (invisible on white)
-        val info: Color,              // #6D17CE
-        val disabled: Color,          // #A7A1B2 — same hex as text.disabled; stays visible on bg.disabled (#D7D3E0)
+        val action: Color,            // tappable chrome (back, close, menu, filter)
+        val nonAction: Color,         // decorative / non-tappable. Neutral_500 — passes graphics AA on bg.default (3.48:1)
+        val inverse: Color,           // on dark surfaces · inside Primary/Destructive CTAs. #FAF9FC, NOT #FFFFFF — solid icons are visually heavier than glyphs at the same hex, so icons step one lightness lighter than their text equivalents.
+        val brand: Color,             // Secondary/Tertiary CTA icons, selected nav, focused chevron
+        val critical: Color,
+        val positive: Color,
+        val warning: Color,           // ONLY on bg.warning/bg.warningSubtle, or inside RatingBar/StarIcon. Fails graphics AA on bg.default (1.6:1).
+        val info: Color,
+        val disabled: Color,          // same hex as text.disabled (Neutral_400). Distinct from icon.nonAction (Neutral_500, darker for AA on light surfaces).
     )
 
     @Immutable
     data class Overlay(
-        val scrim: Color,             // rgba(22,16,33,0.50) — modal backdrop / bottom-sheet scrim (THE ONLY overlay token)
+        val scrim: Color,             // rgba(22,16,33,0.50) — modal backdrop / bottom-sheet scrim. THE only overlay token.
     )
 }
 
 fun lightWiomColors(): WiomColors = WiomColors(
     bg = WiomColors.Bg(
-        default = Color(0xFFFAF9FC),
-        subtle = Color(0xFFF1EDF7),
-        muted = Color(0xFFE8E4F0),
-        inverse = Color(0xFF161021),
-        selected = Color(0xFFFFCCED),
-        disabled = Color(0xFFD7D3E0),
-        brand = Color(0xFFD9008D),
-        brandHover = Color(0xFFC00080),
-        brandPressed = Color(0xFFA30070),
-        brandSubtle = Color(0xFFFFE5F6),
-        brandBold = Color(0xFF443152),
-        brandAccent = Color(0xFFFF66C9),
-        brandAccentPressed = Color(0xFFEA5DB8),
-        critical = Color(0xFFD92130),
-        criticalHover = Color(0xFFBF1D2A),
-        criticalPressed = Color(0xFFA31824),
-        criticalSubtle = Color(0xFFFFE5E7),
-        positive = Color(0xFF008043),
-        positiveSubtle = Color(0xFFE1FAED),
-        warning = Color(0xFFFFDA40),
-        warningSubtle = Color(0xFFFFF2BF),
-        info = Color(0xFF6D17CE),
-        infoSubtle = Color(0xFFF1E5FF),
+        default = P.Neutral_50,
+        subtle = P.Neutral_100,
+        muted = P.Neutral_200,
+        disabled = P.Neutral_300,
+        inverse = P.Neutral_950,
+        selected = P.Brand_200,
+        brandSubtle = P.Brand_100,
+        brandBold = P.Brand_900,
+        positiveSubtle = P.Positive_100,
+        positive = P.Positive_600,
+        criticalSubtle = P.Critical_100,
+        warningSubtle = P.Warning_100,    // #FFE9A1 — was #FFF2BF in v1.x (skill drift, fixed)
+        warning = P.Warning_300,          // #E2B203 gold — was #FFDA40 in v1.x (skill drift, fixed)
+        infoSubtle = P.Info_100,
+        info = P.Info_600,
+        brand = P.Brand_600,
+        brandHover = P.Brand_700,
+        brandPressed = P.Brand_800,
+        brandAccent = P.Brand_400,
+        brandAccentPressed = P.Brand_500,
+        critical = P.Critical_600,
+        criticalHover = P.Critical_700,
+        criticalPressed = P.Critical_800,
     ),
     text = WiomColors.Text(
-        default = Color(0xFF161021),
-        subtle = Color(0xFF5C5570),
-        disabled = Color(0xFFA7A1B2),
-        inverse = Color(0xFFFAF9FC),
-        brand = Color(0xFFD9008D),
-        brandHover = Color(0xFFC00080),
-        onBrand = Color(0xFFFFFFFF),
-        onBrandAccent = Color(0xFF161021),
-        critical = Color(0xFFD92130),
-        onCritical = Color(0xFFFFFFFF),
-        positive = Color(0xFF008043),
-        onPositive = Color(0xFFFFFFFF),
-        onWarning = Color(0xFF372902),
-        info = Color(0xFF6D17CE),
-        onInfo = Color(0xFFFFFFFF),
-        selected = Color(0xFFD9008D),
+        default = P.Neutral_950,
+        subtle = P.Neutral_700,
+        disabled = P.Neutral_400,
+        inverse = P.Neutral_50,
+        selected = P.Brand_600,
+        brand = P.Brand_600,
+        brandHover = P.Brand_700,
+        onBrand = P.Gray_50,              // #FFFFFF — distinct from icon.inverse (#FAF9FC)
+        onBrandAccent = P.Neutral_950,    // dark label on bright Pre-booking pink (white fails AA)
+        critical = P.Critical_600,
+        onCritical = P.Gray_50,
+        positive = P.Positive_600,
+        onPositive = P.Gray_50,
+        onWarning = P.Warning_900,        // #372902 dark olive — pairs with bg.warning, bg.warningSubtle, and bg.default
+        info = P.Info_600,
+        onInfo = P.Gray_50,
     ),
     stroke = WiomColors.Stroke(
-        subtle = Color(0xFFD7D3E0),
-        default = Color(0xFFE8E4F0),
-        strong = Color(0xFF473F55),
-        selected = Color(0xFFD9008D),
-        brandFocus = Color(0xFFD9008D),
-        criticalFocus = Color(0xFFD92130),
-        positiveFocus = Color(0xFF008043),
-        warningFocus = Color(0xFFE2B203),
-        infoFocus = Color(0xFF6D17CE),
+        subtle = P.Neutral_300,
+        default = P.Neutral_200,
+        strong = P.Neutral_800,
+        selected = P.Brand_600,
+        brand = P.Brand_300,              // soft outline
+        brandFocus = P.Brand_600,         // saturated — Secondary CTA / focus ring
+        positive = P.Positive_300,
+        positiveFocus = P.Positive_600,
+        critical = P.Critical_300,
+        criticalFocus = P.Critical_600,
+        warning = P.Warning_300,
+        info = P.Info_300,
+        infoFocus = P.Info_600,
     ),
     icon = WiomColors.Icon(
-        action = Color(0xFF352D42),
-        nonAction = Color(0xFF898296),
-        inverse = Color(0xFFFFFFFF),
-        brand = Color(0xFFD9008D),
-        critical = Color(0xFFD92130),
-        positive = Color(0xFF008043),
-        warning = Color(0xFFE2B203),
-        info = Color(0xFF6D17CE),
-        disabled = Color(0xFFA7A1B2),
+        action = P.Neutral_900,
+        nonAction = P.Neutral_500,
+        inverse = P.Neutral_50,           // #FAF9FC — was #FFFFFF in v1.x (skill drift, fixed)
+        brand = P.Brand_600,
+        critical = P.Critical_600,
+        positive = P.Positive_600,
+        warning = P.Warning_300,
+        info = P.Info_600,
+        disabled = P.Neutral_400,
     ),
     overlay = WiomColors.Overlay(
-        scrim = Color(0x80161021),
+        scrim = Color(0x80161021),        // rgba(22,16,33,0.50) — alpha 128 of Neutral_950
     ),
 )
 

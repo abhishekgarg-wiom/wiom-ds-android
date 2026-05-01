@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Lock
@@ -215,9 +216,7 @@ private fun WiomInputInternal(
         !enabled -> WiomTheme.color.stroke.subtle
         status == WiomInputStatus.Error -> WiomTheme.color.stroke.criticalFocus
         status == WiomInputStatus.Success -> WiomTheme.color.stroke.positiveFocus
-        // Warning: foundation has no orange stroke token; use brandFocus as the
-        // "active" ring so the warning icon + onWarning helper still carry status.
-        status == WiomInputStatus.Warning -> WiomTheme.color.stroke.brandFocus
+        status == WiomInputStatus.Warning -> WiomTheme.color.stroke.warning
         isFocused && !readOnly -> WiomTheme.color.stroke.brandFocus
         else -> WiomTheme.color.stroke.subtle
     }
@@ -322,7 +321,7 @@ private fun WiomInputInternal(
                         singleLine = singleLine,
                         minLines = minLines,
                         textStyle = WiomTheme.type.bodyLg.copy(color = valueColor),
-                        cursorBrush = SolidColor(WiomTheme.color.stroke.brandFocus),
+                        cursorBrush = SolidColor(WiomTheme.color.text.default),
                         visualTransformation = visualTransformation,
                         keyboardOptions = keyboardOptions,
                         interactionSource = interactionSource,
@@ -507,20 +506,6 @@ private fun PreviewInputPhone() {
     }
 }
 
-@Preview(name = "Input · OTP with timer counter", showBackground = true)
-@Composable
-private fun PreviewInputOtp() {
-    com.wiom.designsystem.theme.WiomTheme {
-        WiomInput(
-            value = "483921",
-            onValueChange = {},
-            title = "Enter OTP",
-            helper = "Didn't get the code?",
-            counter = "Resend in 00:24",
-        )
-    }
-}
-
 @Preview(name = "Input · Search", showBackground = true)
 @Composable
 private fun PreviewInputSearch() {
@@ -529,7 +514,7 @@ private fun PreviewInputSearch() {
             value = "Wiom Pro",
             onValueChange = {},
             leadingIcon = Icons.Rounded.Search,
-            trailingIcon = Icons.Rounded.Error,
+            trailingIcon = Icons.Rounded.Close,
             onTrailingIconClick = {},
             placeholder = "Search plans, routers…",
         )

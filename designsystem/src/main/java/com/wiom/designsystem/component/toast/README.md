@@ -44,7 +44,7 @@ toastState.showToast(
 // Actionable:
 toastState.showToast(
     WiomToastMessage(
-        status = WiomToastStatus.Neutral,
+        status = WiomToastStatus.Info,
         message = "Ticket delete kiya",
         action = WiomToastAction("Undo") { restoreTicket() },
         durationMillis = WiomToastMessage.DURATION_LONG,
@@ -62,27 +62,29 @@ toastState.showToast(
 )
 ```
 
-## Statuses
+## Statuses (V2 — all 4 types share `bg.default`)
 
 | `WiomToastStatus` | Fill | Body text | Icon tint | Leading icon |
 |---|---|---|---|---|
-| `Neutral` | `bg.inverse` | `text.inverse` | `icon.inverse` | `Icons.Rounded.Info` |
-| `Positive` | `bg.positiveSubtle` | `text.default` | `icon.positive` | `Icons.Rounded.CheckCircle` |
-| `Critical` | `bg.criticalSubtle` | `text.default` | `icon.critical` | `Icons.Rounded.Error` |
-| `Warning` | `bg.warningSubtle` | `text.onWarning` | `icon.warning` | `Icons.Rounded.Warning` |
-| `Info` | `bg.infoSubtle` | `text.default` | `icon.info` | `Icons.Rounded.Info` |
+| `Critical` | `bg.default` | `text.default` | `icon.critical` | `Icons.Rounded.Error` |
+| `Warning` | `bg.default` | `text.onWarning` | `icon.warning` | `Icons.Rounded.Warning` |
+| `Info` | `bg.default` | `text.default` | `icon.info` | `Icons.Rounded.Info` |
+| `Positive` | `bg.default` | `text.default` | `icon.positive` | `Icons.Rounded.CheckCircle` |
 
-**Warning is the exception** per CLAUDE.md § 6 — body AND action share `text.onWarning` (the one-token warning family). All other statuses render the action label in `text.brand`; `Neutral` uses `text.inverse` on its dark surface.
+**Warning** is the one-token family per `wiom-design-foundations` — body uses `text.onWarning` (the dark olive that pairs with `bg.warning` everywhere). The action label is **always `text.brand`** regardless of status. The close ✕ is always `icon.action`.
+
+The V1 `Neutral` status (dark inverse surface) is gone — V2 has only the 4 status types.
 
 ## Container tokens
 
 | Property | Token | Value |
 |---|---|---|
-| Corner radius | `radius.medium` | 12dp |
-| Padding | `space.lg` | 16dp |
-| Gap icon ↔ body | `space.md` | 12dp |
-| Shadow | `shadow.lg` | 6dp elevation |
-| Body text | `type.bodyMd` | 14sp Regular |
+| Corner radius | `radius.small` | 8dp |
+| Horizontal padding | `space.lg` | 16dp |
+| Vertical padding | `space.md` | 12dp |
+| Gap icon ↔ body | `space.sm` | 8dp |
+| Shadow | `shadow.lg` | 12dp elevation |
+| Body text | `type.bodyLg` | 16sp Regular |
 | Action label | `type.labelLg` | 16sp SemiBold |
 | Leading icon | `iconSize.md` | 24dp |
 
@@ -100,14 +102,16 @@ toastState.showToast(
 - No filled buttons in toasts — the action slot is text-only, per skill § 9.
 - `shadow.lg` on a rounded container — and no border — honors CLAUDE.md § 8 (shadow XOR border).
 
-## Skill-vs-foundation flags
+## V1 → V2 changes
 
-1. **Info fill mismatch.** The skill calls Info `bg.muted` with icon tint `icon.nonAction`. The deliverable spec is `bg.infoSubtle` + `text.info` (with `icon.info` tint). Foundation-correct tokens are used here — Info status should live in the info family, not look neutral.
-2. **Warning fill hex drift.** Skill writes `bg.warning.subtle = #FFE9A1`. Foundation token `bg.warningSubtle = #FFF2BF`. Token used; hex discarded.
-3. **Type name Error → Critical.** Foundation / CLAUDE.md name the family `critical`. Enum value is `WiomToastStatus.Critical` to align.
-4. **Neutral variant added.** Not in the skill's 4-type table; deliverable required 5 statuses including `Neutral` (`bg.inverse` + `text.inverse`). Added as the default dark snackbar for contexts without a status implication.
-5. **Radius `radius-small` in skill vs `radius.medium` in deliverable.** Skill quotes 8dp radius. Deliverable specifies `radius.medium` (12dp). Deliverable wins — the 12dp matches Wiom's card-radius scale and reads as a floating pill, not a cramped chip.
-6. **Body color on Critical.** Skill says `text.default`, CLAUDE.md § 6 confirms: body text on critical/positive banners is `text.default`; only heading is `text.critical`. Toast has only a body, so `text.default` is correct — implemented exactly that way.
+1. **Dropped `WiomToastStatus.Neutral`.** V2 ships only 4 status types — `Critical · Warning · Info · Positive`.
+2. **All types share `bg.default`.** V1 used per-type tinted backgrounds (`bg.criticalSubtle`, `bg.warningSubtle`, etc.) — V2 makes the icon (and Warning's body text) the only carrier of the status colour.
+3. **Radius `medium` (12) → `small` (8).**
+4. **Padding `space.lg` all sides → `space.lg H × space.md V`** (16/12).
+5. **Body style `bodyMd` (14sp) → `bodyLg` (16sp).**
+6. **Action colour always `text.brand`.** V1 used per-type colours (e.g. `text.onWarning` for Warning).
+7. **Close ✕ tint always `icon.action`.** V1 inherited the type's icon tint.
+8. **Width 328 / 16dp gutter** (was 344 / 8dp). Toast aligns to the standard surface gutter used by every other inline component.
 
 ## Known gaps
 

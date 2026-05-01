@@ -60,7 +60,7 @@ Components MUST NOT set fixed `height` or `width` on wrappers that contain text.
 
 `defaultMinSize(minHeight = 48.dp)` is OK for touch targets. Fixed `height(…)` / `size(…)` is not.
 
-Exception: icon-only square touch targets, drag handles, thumbs, and atoms whose dimensions are part of their spec (checkbox 20dp indicator, switch 52×32 track, stepper 32dp circle).
+Exception: icon-only square touch targets, drag handles, thumbs, and atoms whose dimensions are part of their spec (checkbox 20dp indicator, switch 52×32 track).
 
 ---
 

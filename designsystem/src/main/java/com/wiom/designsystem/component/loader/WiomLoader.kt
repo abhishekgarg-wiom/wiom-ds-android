@@ -3,7 +3,9 @@ package com.wiom.designsystem.component.loader
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -15,13 +17,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AllInclusive
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,7 +39,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.wiom.designsystem.foundation.icon.WiomIcon
 import com.wiom.designsystem.theme.WiomTheme
 
 /**
@@ -92,7 +92,7 @@ fun WiomSpinner(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 900, easing = LinearEasing),
+            animation = tween(durationMillis = 1000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "rotation",
@@ -281,13 +281,13 @@ fun WiomSkeletonListItem(
 // ---- Full-screen blocking loader -------------------------------------------
 
 /**
- * Variants for [WiomBlockingLoader] — full-screen wait.
+ * Variants for [WiomBrandLoader] — full-screen wait.
  *
  * - [Light] : light surface, for splash / cold start / post-login.
  * - [OnBrand] : brand-pink surface, for branded intro moments and marketing.
  * - [Overlay] : scrim over existing content, for blocking critical ops (payment / KYC upload).
  */
-enum class WiomBlockingLoaderStyle {
+enum class WiomBrandLoaderStyle {
     Light,
     OnBrand,
     Overlay,
@@ -307,35 +307,35 @@ enum class WiomBlockingLoaderStyle {
  * For short waits (<3s) inline a [WiomSpinner] instead of this heavier variant.
  *
  * @param modifier Modifier.
- * @param style One of [WiomBlockingLoaderStyle]. Default `Light`.
+ * @param style One of [WiomBrandLoaderStyle]. Default `Light`.
  * @param message Optional status copy shown below the spinner.
  */
 @Composable
-fun WiomBlockingLoader(
+fun WiomBrandLoader(
     modifier: Modifier = Modifier,
-    style: WiomBlockingLoaderStyle = WiomBlockingLoaderStyle.Light,
+    style: WiomBrandLoaderStyle = WiomBrandLoaderStyle.Light,
     message: String? = null,
 ) {
     val surfaceColor = when (style) {
-        WiomBlockingLoaderStyle.Light -> WiomTheme.color.bg.default
-        WiomBlockingLoaderStyle.OnBrand -> WiomTheme.color.bg.brand
-        WiomBlockingLoaderStyle.Overlay -> WiomTheme.color.overlay.scrim
+        WiomBrandLoaderStyle.Light -> WiomTheme.color.bg.default
+        WiomBrandLoaderStyle.OnBrand -> WiomTheme.color.bg.brand
+        WiomBrandLoaderStyle.Overlay -> WiomTheme.color.overlay.scrim
     }
     val messageColor = when (style) {
-        WiomBlockingLoaderStyle.Light -> WiomTheme.color.text.subtle
-        WiomBlockingLoaderStyle.OnBrand,
-        WiomBlockingLoaderStyle.Overlay -> WiomTheme.color.text.inverse
+        WiomBrandLoaderStyle.Light -> WiomTheme.color.text.subtle
+        WiomBrandLoaderStyle.OnBrand,
+        WiomBrandLoaderStyle.Overlay -> WiomTheme.color.text.onBrand    // #FFFFFF — pairs with bg.brand / scrim
     }
     val spinnerTone = when (style) {
-        WiomBlockingLoaderStyle.Light -> WiomSpinnerTone.Brand
-        WiomBlockingLoaderStyle.OnBrand,
-        WiomBlockingLoaderStyle.Overlay -> WiomSpinnerTone.OnColor
+        WiomBrandLoaderStyle.Light -> WiomSpinnerTone.Brand
+        WiomBrandLoaderStyle.OnBrand,
+        WiomBrandLoaderStyle.Overlay -> WiomSpinnerTone.OnColor
     }
-    val iconTint = when (style) {
-        WiomBlockingLoaderStyle.Light -> WiomTheme.color.icon.brand
-        WiomBlockingLoaderStyle.OnBrand,
-        WiomBlockingLoaderStyle.Overlay -> WiomTheme.color.icon.inverse
+    val wordmarkColor = when (style) {
+        WiomBrandLoaderStyle.OnBrand -> WiomTheme.color.text.onBrand
+        else -> WiomTheme.color.text.brand
     }
+    val showWordmark = style != WiomBrandLoaderStyle.Overlay
 
     Box(
         modifier = modifier
@@ -349,14 +349,17 @@ fun WiomBlockingLoader(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg),
         ) {
-            // Brand glyph — Material Rounded infinity as the closest canonical
-            // stand-in for the Wiom wordmark-mark until a branded asset ships.
-            WiomIcon(
-                imageVector = Icons.Rounded.AllInclusive,
-                contentDescription = null,
-                size = WiomTheme.iconSize.lg,
-                tint = iconTint,
-            )
+            // Wordmark "Wiom" — present on Light and OnBrand. Overlay omits it
+            // (the underlying content carries the context).
+            if (showWordmark) {
+                Text(
+                    text = "Wiom",
+                    style = WiomTheme.type.headingXl,
+                    color = wordmarkColor,
+                )
+            }
+            // Infinity slot — until the Lottie stroke-dash chase ships, render
+            // WiomSpinner.Lg as a structural stand-in (per skill §3 note).
             WiomSpinner(size = WiomSpinnerSize.Lg, tone = spinnerTone)
             if (!message.isNullOrEmpty()) {
                 Text(
@@ -367,6 +370,140 @@ fun WiomBlockingLoader(
             }
         }
     }
+}
+
+// ---- Linear ----------------------------------------------------------------
+
+/**
+ * Loader linear progress bar — the 4dp track for short waits (≤ 5 s).
+ *
+ * - `progress = null` → indeterminate; a 40% fill segment travels left → right
+ *   on a 1.5s loop.
+ * - `progress = 0f..1f` → determinate; fill animates from previous to new value.
+ *
+ * The bar fills the parent's width; height is fixed at 4dp. Parent surface
+ * (snackbar / inline strip) provides chrome — this composable is the bar only.
+ *
+ * For long-form determinate progress with milestones / step counters / KYC,
+ * use `WiomProgressLinear` from the progress-indicator family instead.
+ */
+@Composable
+fun WiomLinearProgress(
+    progress: Float? = null,
+    modifier: Modifier = Modifier,
+) {
+    val isIndeterminate = progress == null
+    val targetFraction = progress?.coerceIn(0f, 1f) ?: 0f
+    val animatedFraction by animateFloatAsState(
+        targetValue = targetFraction,
+        animationSpec = tween(durationMillis = 300, easing = LinearEasing),
+        label = "WiomLinearDeterminate",
+    )
+
+    val transition = rememberInfiniteTransition(label = "WiomLinearIndeterminate")
+    val travel by transition.animateFloat(
+        initialValue = -0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "travel",
+    )
+
+    val track = WiomTheme.color.bg.brandSubtle
+    val fill = WiomTheme.color.bg.brand
+    val shape = RoundedCornerShape(WiomTheme.radius.full)
+
+    Canvas(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .clip(shape)
+            .background(color = track, shape = shape),
+    ) {
+        if (isIndeterminate) {
+            val w = size.width * 0.4f
+            val x = travel * size.width
+            drawRect(color = fill, topLeft = Offset(x, 0f), size = Size(w, size.height))
+        } else {
+            val w = size.width * animatedFraction
+            drawRect(color = fill, topLeft = Offset.Zero, size = Size(w, size.height))
+        }
+    }
+}
+
+// ---- Dots ------------------------------------------------------------------
+
+/** Tone for [WiomDots] — 3 ship colors. */
+enum class WiomDotsColor { Brand, Neutral, OnColor }
+
+/**
+ * Chat typing indicator — 3 dots in a chat bubble that bounce in sequence.
+ *
+ * - `Brand`   → bot/assistant composing (default — soft brand bubble + brand dots)
+ * - `Neutral` → human-agent typing (de-emphasised)
+ * - `OnColor` → inside a brand-filled chat bubble (white dots on brand)
+ *
+ * Bubble shape is the chat-bubble convention: 16dp on three corners,
+ * 4dp on the bottom-left tail.
+ */
+@Composable
+fun WiomDots(
+    color: WiomDotsColor = WiomDotsColor.Brand,
+    modifier: Modifier = Modifier,
+) {
+    val c = WiomTheme.color
+    val (bubble, dot) = when (color) {
+        WiomDotsColor.Brand -> c.bg.subtle to c.bg.brand
+        WiomDotsColor.Neutral -> c.bg.subtle to c.text.subtle
+        WiomDotsColor.OnColor -> c.bg.brand to c.icon.inverse
+    }
+    val shape = RoundedCornerShape(
+        topStart = WiomTheme.radius.large,
+        topEnd = WiomTheme.radius.large,
+        bottomEnd = WiomTheme.radius.large,
+        bottomStart = WiomTheme.radius.tiny,
+    )
+
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(color = bubble, shape = shape)
+            .padding(horizontal = WiomTheme.spacing.md, vertical = 10.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.xs)) {
+            repeat(3) { i ->
+                BouncingDot(color = dot, phaseMillis = i * 150)
+            }
+        }
+    }
+}
+
+@Composable
+private fun BouncingDot(color: Color, phaseMillis: Int) {
+    val transition = rememberInfiniteTransition(label = "WiomDotsBounce")
+    val bounce by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 1000
+                delayMillis = phaseMillis
+                0f at 0
+                -3f at 200
+                0f at 400
+            },
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "offset",
+    )
+    Box(
+        modifier = Modifier
+            .offset(y = bounce.dp)
+            .size(8.dp)
+            .background(color, CircleShape),
+    )
 }
 
 // ---- internals --------------------------------------------------------------
@@ -518,8 +655,8 @@ private fun PreviewSkeletonStatic() {
 @Composable
 private fun PreviewBlockingLoaderLight() {
     WiomTheme {
-        WiomBlockingLoader(
-            style = WiomBlockingLoaderStyle.Light,
+        WiomBrandLoader(
+            style = WiomBrandLoaderStyle.Light,
             message = "Loading your dashboard…",
         )
     }
@@ -529,8 +666,8 @@ private fun PreviewBlockingLoaderLight() {
 @Composable
 private fun PreviewBlockingLoaderOnBrand() {
     WiomTheme {
-        WiomBlockingLoader(
-            style = WiomBlockingLoaderStyle.OnBrand,
+        WiomBrandLoader(
+            style = WiomBrandLoaderStyle.OnBrand,
             message = "Getting things ready…",
         )
     }
@@ -540,8 +677,8 @@ private fun PreviewBlockingLoaderOnBrand() {
 @Composable
 private fun PreviewBlockingLoaderOverlay() {
     WiomTheme {
-        WiomBlockingLoader(
-            style = WiomBlockingLoaderStyle.Overlay,
+        WiomBrandLoader(
+            style = WiomBrandLoaderStyle.Overlay,
             message = "Processing your payment…",
         )
     }
