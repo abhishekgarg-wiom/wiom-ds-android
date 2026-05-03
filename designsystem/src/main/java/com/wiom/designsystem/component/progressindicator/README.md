@@ -1,6 +1,6 @@
 # WiomProgressIndicator
 
-Determinate and indeterminate progress bars / rings for the Wiom Android library. Built from `.skills-cache/wiom-progress-indicator.md` (determinate linear / milestones / icon bar) plus the circular determinate + indeterminate variants requested by the v1.0 deliverable.
+Determinate and indeterminate progress bars / rings for the Wiom Android library. Built against the `wiom-progress-indicator` skill (linear · completion · milestones · circular).
 
 ## Purpose
 
@@ -90,4 +90,4 @@ All composables take `modifier: Modifier = Modifier` as the first optional param
 
 - No "Attention / Blocked" variant — yellow/red tones are intentionally excluded.
 - No numeric %% label inside the bar. Compose the bar alongside a `Text(…%)` at the call site when needed.
-- Circular is not in the upstream `wiom-progress-indicator` skill (which covers only linear / milestones / icon-bar). Circular determinate + indeterminate are introduced here to satisfy the v1.0 deliverable brief; the skill author should incorporate them in the next refresh.
+- The upstream `wiom-progress-indicator` skill covers Linear · Completion · Milestones · Circular. Indeterminate variants for Linear and Circular are added here on top of the skill's determinate spec.

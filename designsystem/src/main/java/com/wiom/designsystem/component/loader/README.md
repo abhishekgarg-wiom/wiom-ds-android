@@ -95,13 +95,13 @@ WiomBrandLoader(style = WiomBrandLoaderStyle.Overlay, message = "Processing your
 
 - The skill calls the brand spinner track `bg.brand.subtle`; foundation token is `bg.brandSubtle`. Identical color, style-only path drift in the skill.
 - The skill's **Brand loader** is built around a bespoke infinity vector at Figma node `2068:48`. We use `Icons.Rounded.AllInclusive` as the closest canonical stand-in so we don't import a one-off drawable into `res/drawable/` (which is reserved for `ic_wiom_*` / `ic_partner_*`). When the branded vector asset is added to the drawable set, swap the glyph in `WiomBrandLoader` and surface a `WiomIcons.infinity` facade entry.
-- The skill ships a **Status ring** (Wait → Success → Error) and a **Typing dots** variant. Neither is in this build — they're out of scope for the v1.0 loader deliverable. Add them alongside an outcome-aware API (e.g. `WiomStatusLoader(state: Wait/Success/Error)`) and chat-bubble composite in a later release.
+- The skill ships a **Status ring** (Wait → Success → Error). Not in this build — tracked for a later release alongside an outcome-aware API (e.g. `WiomStatusLoader(state: Wait/Success/Error)`).
 - The skill quotes `bg.warning.subtle = #FFE9A1` under the Typing dots spec. Foundation is `#FFF2BF`. Skill drift; unused here but flagged for the skill author.
 
 ## Known gaps
 
 - No Status ring (Wait → Success / Error). Deferred.
-- Brand loader uses a "Wiom" wordmark + spinner since v2.0.0 (the V1 `Icons.Rounded.AllInclusive` placeholder is gone). When the branded infinity vector lands in `res/drawable/`, swap the wordmark out.
+- Brand loader currently renders a "Wiom" wordmark + spinner. When the branded infinity vector lands in `res/drawable/`, swap the wordmark out.
 - Skeleton shimmer is a plain gradient (no elastic ease, no left/right selection). Matches the skill's "pending motion decision".
 
 Typing dots (`WiomDots`) and short-wait linear progress (`WiomLinearProgress`) ship in v2.0.0 — see `WiomLoader.kt`.

@@ -22,7 +22,7 @@ That's it. You'll be notified by email when someone responds.
 
 The template asks for this, but in case you skip:
 
-- **Library version** — from your `build.gradle.kts`: `v0.2.0`, `v0.1.1`, etc.
+- **Library version** — from your `build.gradle.kts`, e.g. `v2.0.0`.
 - **Screenshot or video** — the single most useful thing. Any photo of the phone screen or a screen recording works.
 - **Figma link** (for visual mismatches) — so the reviewer can compare without hunting for the frame.
 - **Device + Android version** (for bugs) — some bugs only happen on older Android or specific OEM skins.
@@ -53,9 +53,9 @@ If you're not sure it's a bug and just want to ask "how do I do X with this libr
 
 ## Release cadence
 
-- **Patch releases** (v0.2.1, v0.2.2) — bug fixes, visual tweaks. As soon as something needs fixing.
-- **Minor releases** (v0.3.0) — new components, new variants, new params. Every few weeks.
-- **Major releases** (v1.0.0) — breaking API changes. Rarely. Will include a migration guide.
+- **Patch releases** (e.g. `v2.0.1`) — bug fixes, visual tweaks. As soon as something needs fixing.
+- **Minor releases** (e.g. `v2.1.0`) — new components, new variants, new params. Every few weeks.
+- **Major releases** (e.g. `v3.0.0`) — breaking API changes. Rarely. Will include release notes describing the changes.
 
 After any release, check [CHANGELOG.md](./CHANGELOG.md) for what changed and if it affects your app.
 

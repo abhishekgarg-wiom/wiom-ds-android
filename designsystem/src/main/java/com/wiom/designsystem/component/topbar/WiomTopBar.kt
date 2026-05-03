@@ -59,7 +59,7 @@ enum class WiomTopBarState { Default, Centered, Scrolled, Search }
  * [leading] (defaults to `ArrowBack`) and [actions] (a `RowScope` for trailing icons / text CTAs).
  *
  * For Medium / Large, the [title] sits on a second row below the action row — no collapse
- * animation in v1.
+ * animation.
  *
  * Use [WiomTopBarIconAction] for icon actions in the trailing row and [WiomTopBarTextAction]
  * for text CTAs like "Save" / "Done".

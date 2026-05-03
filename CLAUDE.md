@@ -25,7 +25,7 @@ All colors are element-first. Four namespaces map 1:1 to Compose slots:
 - `BorderStroke(…)`, `Modifier.border(…)`, `Divider` → **`WiomTheme.color.stroke.*`**
 - `Icon(tint=…)` → **`WiomTheme.color.icon.*`**
 
-Legacy role-first tokens (`color.brand.primary`, `color.warning.primary`, `colors.positive.soft`) are **gone** in v1.0.0. Don't resurrect them.
+Don't reach for role-first names like `color.brand.primary`, `color.warning.primary`, `colors.positive.soft` — those don't exist here. Element-first only.
 
 Never use raw hex / sp / dp literals in component code. Foundation files are the only place those are defined.
 
@@ -163,4 +163,4 @@ Current cached skills (post–V2 refresh): `.skills-cache/` in the repo (gitigno
 - Pre-checked consent checkboxes
 - Red button for non-destructive actions
 - Titles + subtitles concatenated into one string
-- `WiomDropdown` (deleted in v1.0.0 — use `WiomInput(readOnly=true)` + chevron + bottom-sheet picker)
+- `WiomDropdown` — not exposed; use `WiomInput(readOnly = true)` + trailing chevron + `WiomBottomSheet` picker (canonical V2 picker pattern)

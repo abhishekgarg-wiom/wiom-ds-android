@@ -49,8 +49,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * - [Critical] — server-rejected / failed actions.
  * - [Warning] — non-blocking caution (offline, degraded). One-token family — body and
  *   action share `text.onWarning` (the dark olive).
- * - [Info] — neutral state change, purely informational. Replaces the V1 dark-snackbar
- *   "Neutral" status (V2 has no inverse-surface variant — all toasts are light surfaces).
+ * - [Info] — neutral state change, purely informational. Use this for fire-and-forget
+ *   feedback ("Draft saved", "Status updated") — there's no separate dark-snackbar variant;
+ *   all toasts share the light `bg.default` surface, only the icon carries the status colour.
  * - [Positive] — success outcome. Use sparingly per Wiom Constitution; only when the
  *   user genuinely needs confirmation (e.g. wallet withdrawal sent). Never for money
  *   moments — those need a confirmable surface, not a transient toast.

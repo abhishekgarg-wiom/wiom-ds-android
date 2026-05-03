@@ -62,7 +62,7 @@ WiomIcon(Icons.Rounded.Search, contentDescription = "Search", tint = WiomTheme.c
 
 ---
 
-## What's in v1.0.0
+## What's in v2.0.0
 
 ### Foundations
 - 4 color namespaces (`bg` / `text` / `stroke` / `icon`) + `overlay.scrim`

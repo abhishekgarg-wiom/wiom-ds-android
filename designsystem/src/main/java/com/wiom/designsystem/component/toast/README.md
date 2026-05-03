@@ -73,7 +73,6 @@ toastState.showToast(
 
 **Warning** is the one-token family per `wiom-design-foundations` — body uses `text.onWarning` (the dark olive that pairs with `bg.warning` everywhere). The action label is **always `text.brand`** regardless of status. The close ✕ is always `icon.action`.
 
-The V1 `Neutral` status (dark inverse surface) is gone — V2 has only the 4 status types.
 
 ## Container tokens
 
@@ -101,17 +100,6 @@ The V1 `Neutral` status (dark inverse surface) is gone — V2 has only the 4 sta
 - Body of the toast is **not** tappable. Only the action label and close X are interactive — matches skill § 9 rule 10.
 - No filled buttons in toasts — the action slot is text-only, per skill § 9.
 - `shadow.lg` on a rounded container — and no border — honors CLAUDE.md § 8 (shadow XOR border).
-
-## V1 → V2 changes
-
-1. **Dropped `WiomToastStatus.Neutral`.** V2 ships only 4 status types — `Critical · Warning · Info · Positive`.
-2. **All types share `bg.default`.** V1 used per-type tinted backgrounds (`bg.criticalSubtle`, `bg.warningSubtle`, etc.) — V2 makes the icon (and Warning's body text) the only carrier of the status colour.
-3. **Radius `medium` (12) → `small` (8).**
-4. **Padding `space.lg` all sides → `space.lg H × space.md V`** (16/12).
-5. **Body style `bodyMd` (14sp) → `bodyLg` (16sp).**
-6. **Action colour always `text.brand`.** V1 used per-type colours (e.g. `text.onWarning` for Warning).
-7. **Close ✕ tint always `icon.action`.** V1 inherited the type's icon tint.
-8. **Width 328 / 16dp gutter** (was 344 / 8dp). Toast aligns to the standard surface gutter used by every other inline component.
 
 ## Known gaps
 
