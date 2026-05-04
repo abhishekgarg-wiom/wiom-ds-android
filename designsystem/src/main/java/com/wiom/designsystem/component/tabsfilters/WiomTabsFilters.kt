@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -311,7 +313,7 @@ fun WiomChip(
             // dispatches `onClose` if provided; otherwise falls back to `onClick` (deselect).
             // Hidden on Disabled — disabled chips aren't interactive.
             com.wiom.designsystem.foundation.icon.WiomIcon(
-                imageVector = androidx.compose.material.icons.Icons.Rounded.Close,
+                imageVector = Icons.Rounded.Close,
                 contentDescription = "Remove ${'$'}label",
                 size = WiomTheme.iconSize.xs,
                 tint = WiomTheme.color.icon.brand,
