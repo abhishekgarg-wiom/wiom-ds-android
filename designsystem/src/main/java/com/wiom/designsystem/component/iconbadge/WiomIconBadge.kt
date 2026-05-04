@@ -1,5 +1,6 @@
 package com.wiom.designsystem.component.iconbadge
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,12 +14,14 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -80,6 +83,43 @@ fun WiomIconBadge(
             contentDescription = contentDescription,
             tint = palette.glyphTint,
             size = dims.glyph,
+        )
+    }
+}
+
+/**
+ * Drawable / painter overload — for `ic_wiom_*` and `ic_partner_*` brand glyphs.
+ * `painterResource` is reserved for brand assets only — never for standard Material icons.
+ *
+ * @param iconRes brand drawable (`ic_wiom_*` / `ic_partner_*`).
+ * @param size Container size. `Sm` 24dp · `Md` 48dp · `Lg` 96dp.
+ * @param tone Color family — container bg + glyph tint are paired.
+ * @param contentDescription Brand glyphs typically convey meaning — pass a non-null string.
+ * @param modifier Accepts alignment + parent-driven padding only.
+ */
+@Composable
+fun WiomIconBadge(
+    @DrawableRes iconRes: Int,
+    modifier: Modifier = Modifier,
+    size: WiomIconBadgeSize = WiomIconBadgeSize.Md,
+    tone: WiomIconBadgeTone = WiomIconBadgeTone.Neutral,
+    contentDescription: String? = null,
+) {
+    val dims = dimensionsFor(size)
+    val palette = paletteFor(tone)
+    Box(
+        modifier = modifier
+            .size(dims.container)
+            .clip(CircleShape)
+            .background(color = palette.containerBg, shape = CircleShape)
+            .padding(dims.padding),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = contentDescription,
+            tint = palette.glyphTint,
+            modifier = Modifier.size(dims.glyph),
         )
     }
 }

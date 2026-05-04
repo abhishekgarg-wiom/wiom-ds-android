@@ -9,8 +9,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
@@ -54,7 +60,7 @@ enum class WiomTopBarState { Default, Centered, Scrolled, Search }
  * [leading] (defaults to `ArrowBack`) and [actions] (a `RowScope` for trailing icons / text CTAs).
  *
  * For Medium / Large, the [title] sits on a second row below the action row — no collapse
- * animation in v1.
+ * animation.
  *
  * Use [WiomTopBarIconAction] for icon actions in the trailing row and [WiomTopBarTextAction]
  * for text CTAs like "Save" / "Done".
@@ -79,17 +85,35 @@ fun WiomTopBar(
     searchQuery: String = "",
     searchPlaceholder: String = "Search",
     onSearchQueryChange: (String) -> Unit = {},
+    isDarkVariant: Boolean = false,
     leading: @Composable () -> Unit = {
         WiomTopBarIconAction(icon = Icons.AutoMirrored.Rounded.ArrowBack, onClick = {})
     },
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    // Skill §6: dark variant uses `bg.brand.bold` + `text.inverse` + `icon.inverse`. Dark variant
+    // doesn't support `Show Subtitle = true` or `state = Search` — there's no dimmed-inverse text
+    // token and no translucent-inverse pill fill that contrasts with `bg.brand.bold`. Guard hard.
+    if (isDarkVariant) {
+        require(subtitle.isNullOrEmpty()) {
+            "Dark-variant top bar doesn't support a subtitle (no dimmed-inverse text token)"
+        }
+        require(state != WiomTopBarState.Search) {
+            "Dark-variant top bar doesn't support the Search state (no inverse-translucent pill fill)"
+        }
+    }
     val shadowDp = if (state == WiomTopBarState.Scrolled) WiomTheme.shadow.sm else WiomTheme.shadow.none
+    val containerColor =
+        if (isDarkVariant) WiomTheme.color.bg.brandBold else WiomTheme.color.bg.default
+    // Bar consumes the status-bar inset so the surface reads as continuous with the OS strip.
     val container = modifier
         .fillMaxWidth()
         .shadow(shadowDp)
-        .background(WiomTheme.color.bg.default)
+        .background(containerColor)
+        .statusBarsPadding()
 
+    val titleColor =
+        if (isDarkVariant) WiomTheme.color.text.inverse else WiomTheme.color.text.default
     when (size) {
         WiomTopBarSize.Small -> SmallTopBar(
             modifier = container,
@@ -101,19 +125,47 @@ fun WiomTopBar(
             onSearchQueryChange = onSearchQueryChange,
             leading = leading,
             actions = actions,
+            titleColor = titleColor,
         )
         WiomTopBarSize.Medium -> MediumTopBar(
             modifier = container,
             title = title,
             leading = leading,
             actions = actions,
+            titleColor = titleColor,
         )
         WiomTopBarSize.Large -> LargeTopBar(
             modifier = container,
             title = title,
             leading = leading,
             actions = actions,
+            titleColor = titleColor,
         )
+    }
+}
+
+/**
+ * Pair the OS status bar with the top bar. Call once per screen, after `enableEdgeToEdge`.
+ *
+ * Light variant → status-bar background `bg.default`, status-bar content (time / signal /
+ * battery) **dark**. Dark variant → status-bar background `bg.brand.bold`, content **light**.
+ *
+ * Skipped silently when not hosted in an Activity (tests, previews, custom ContextWrapper).
+ *
+ * @param isDarkVariant `true` matches `WiomTopBar(..., isDarkVariant = true)`.
+ */
+@Composable
+fun WiomTopBarStatusBar(isDarkVariant: Boolean = false) {
+    val view = androidx.compose.ui.platform.LocalView.current
+    val containerColor =
+        if (isDarkVariant) WiomTheme.color.bg.brandBold else WiomTheme.color.bg.default
+    androidx.compose.runtime.SideEffect {
+        val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
+        @Suppress("DEPRECATION")
+        window.statusBarColor = containerColor.toArgb()
+        androidx.core.view.WindowCompat
+            .getInsetsController(window, view)
+            .isAppearanceLightStatusBars = !isDarkVariant
     }
 }
 
@@ -191,10 +243,14 @@ private fun SmallTopBar(
     onSearchQueryChange: (String) -> Unit,
     leading: @Composable () -> Unit,
     actions: @Composable RowScope.() -> Unit,
+    titleColor: androidx.compose.ui.graphics.Color = WiomTheme.color.text.default,
 ) {
+    val outerStart = WiomTheme.spacing.xs
+    val outerEnd = if (state == WiomTopBarState.Search) WiomTheme.spacing.lg else WiomTheme.spacing.xs
     Row(
         modifier = modifier
-            .padding(horizontal = WiomTheme.spacing.xs, vertical = WiomTheme.spacing.sm),
+            .height(64.dp)
+            .padding(start = outerStart, end = outerEnd, top = WiomTheme.spacing.sm, bottom = WiomTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Leading
@@ -228,7 +284,7 @@ private fun SmallTopBar(
                         Text(
                             text = title,
                             style = WiomTheme.type.titleLg,
-                            color = WiomTheme.color.text.default,
+                            color = titleColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center,
@@ -262,7 +318,7 @@ private fun SmallTopBar(
                     Text(
                         text = title,
                         style = WiomTheme.type.titleLg,
-                        color = WiomTheme.color.text.default,
+                        color = titleColor,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -294,33 +350,43 @@ private fun SearchPill(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Intrinsic height from icon (24dp) + vertical padding (sm = 8dp) = 40dp — above the
-    // 40dp search-pill minimum; grows with user font scale.
+    // space-16 H × space-8 V padding, gap space-12 between leading icon and field, 20 dp icon
+    // (smaller than the 24 dp action-row icons per skill §1).
     Row(
         modifier = modifier
             .background(
                 color = WiomTheme.color.bg.subtle,
                 shape = RoundedCornerShape(WiomTheme.radius.full),
             )
-            .padding(horizontal = WiomTheme.spacing.md, vertical = WiomTheme.spacing.sm),
+            .padding(horizontal = WiomTheme.spacing.lg, vertical = WiomTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
     ) {
         WiomIcon(
             imageVector = Icons.Rounded.Search,
             contentDescription = null,
+            size = WiomTheme.iconSize.sm,
             tint = WiomTheme.color.icon.nonAction,
         )
-        Text(
-            modifier = Modifier.padding(start = WiomTheme.spacing.sm),
-            text = query.ifEmpty { placeholder },
-            style = WiomTheme.type.bodyLg,
-            color = if (query.isEmpty()) WiomTheme.color.text.disabled else WiomTheme.color.text.default,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        // Note: BasicTextField wiring is left to the consumer — pass a modifier or plug into
-        // WiomInput once that component is ready. This matches the v1 surface: display only.
-        @Suppress("UNUSED_EXPRESSION") onQueryChange
+        Box(modifier = Modifier.weight(1f)) {
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = WiomTheme.type.bodyLg.copy(color = WiomTheme.color.text.default),
+                cursorBrush = SolidColor(WiomTheme.color.text.default),
+            )
+            if (query.isEmpty()) {
+                Text(
+                    text = placeholder,
+                    style = WiomTheme.type.bodyLg,
+                    color = WiomTheme.color.text.disabled,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 
@@ -335,24 +401,25 @@ private fun MediumTopBar(
     title: String,
     leading: @Composable () -> Unit,
     actions: @Composable RowScope.() -> Unit,
+    titleColor: androidx.compose.ui.graphics.Color = WiomTheme.color.text.default,
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.height(112.dp)) {
         ActionRow(leading = leading, actions = actions)
-        Text(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = WiomTheme.spacing.lg,
-                    end = WiomTheme.spacing.lg,
-                    top = WiomTheme.spacing.sm,
-                    bottom = WiomTheme.spacing.sm,
-                ),
-            text = title,
-            style = WiomTheme.type.headingLg,
-            color = WiomTheme.color.text.default,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+                .weight(1f)
+                .padding(horizontal = WiomTheme.spacing.lg, vertical = WiomTheme.spacing.sm),
+            contentAlignment = Alignment.BottomStart,
+        ) {
+            Text(
+                text = title,
+                style = WiomTheme.type.headingLg,
+                color = titleColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -367,24 +434,30 @@ private fun LargeTopBar(
     title: String,
     leading: @Composable () -> Unit,
     actions: @Composable RowScope.() -> Unit,
+    titleColor: androidx.compose.ui.graphics.Color = WiomTheme.color.text.default,
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.height(152.dp)) {
         ActionRow(leading = leading, actions = actions)
-        Text(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .weight(1f)
                 .padding(
                     start = WiomTheme.spacing.lg,
                     end = WiomTheme.spacing.lg,
                     top = WiomTheme.spacing.md,
                     bottom = WiomTheme.spacing.xxl,
                 ),
-            text = title,
-            style = WiomTheme.type.headingXl,
-            color = WiomTheme.color.text.default,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+            contentAlignment = Alignment.BottomStart,
+        ) {
+            Text(
+                text = title,
+                style = WiomTheme.type.headingXl,
+                color = titleColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -393,9 +466,11 @@ private fun ActionRow(
     leading: @Composable () -> Unit,
     actions: @Composable RowScope.() -> Unit,
 ) {
+    // Action row is 48 dp (Medium / Large) per skill §2.
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(48.dp)
             .padding(horizontal = WiomTheme.spacing.xs, vertical = WiomTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {

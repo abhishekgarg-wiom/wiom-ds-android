@@ -32,9 +32,8 @@ The container takes a `WiomBottomSheetSize` enum. List variants set a min-height
 | `Half` | `heightIn(min = 400.dp)` | Header + 3–4 list rows, picker |
 | `Expanded` | `heightIn(min = 600.dp)` | Header + 5+ rows, filter sheet |
 | `Full` | fill (via `skipPartiallyExpanded`) | Long scrollable content |
-| `Illustration` | hug | Centered illustration + text |
-| `IllustrationCta` | hug | Illustration + text + action bar |
-| `IllustrationLeft` | hug | Compact feedback with image left, text right (composed inline) |
+| `Illustration` | hug | Centered illustration + text (action bar optional) |
+| `IllustrationLeft` | hug | Compact feedback with badge left, text right — set via `WiomBottomSheetIllustration(..., leftAligned = true)` |
 | `Share` | hug | Header + horizontal row / list of share targets |
 | `Form` | hug | Header + 1–3 `WiomInput` fields + action bar |
 
@@ -59,7 +58,7 @@ fun WiomBottomSheet(
 
 enum class WiomBottomSheetSize {
     Compact, Half, Expanded, Full,
-    Illustration, IllustrationCta, IllustrationLeft, Share, Form
+    Illustration, IllustrationLeft, Share, Form
 }
 ```
 
@@ -80,7 +79,7 @@ enum class WiomBottomSheetSize {
 if (showSheet) {
     WiomBottomSheet(
         onDismissRequest = { showSheet = false },
-        size = WiomBottomSheetSize.IllustrationCta,
+        size = WiomBottomSheetSize.Illustration,
     ) {
         WiomBottomSheetIllustration(
             icon = Icons.Rounded.Payment,

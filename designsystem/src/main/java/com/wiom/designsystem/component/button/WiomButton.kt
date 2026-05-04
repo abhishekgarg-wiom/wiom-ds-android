@@ -33,6 +33,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.wiom.designsystem.component.selectioncontrol.WiomCheckbox
+import com.wiom.designsystem.component.selectioncontrol.WiomCheckboxSelection
+import com.wiom.designsystem.component.selectioncontrol.WiomIndicatorState
 import com.wiom.designsystem.foundation.icon.WiomIcon
 import com.wiom.designsystem.theme.WiomTheme
 
@@ -127,7 +130,7 @@ fun WiomButton(
         onClick = onClick,
     )
 
-    Box(modifier = container) {
+    Box(modifier = container, contentAlignment = Alignment.Center) {
         Row(
             modifier = Modifier.padding(horizontal = WiomTheme.spacing.lg, vertical = WiomTheme.spacing.md),
             horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
@@ -167,7 +170,7 @@ fun WiomButton(
                 strokeWidth = WiomTheme.stroke.medium,
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(WiomTheme.iconSize.sm),
+                    .size(WiomTheme.iconSize.md),
             )
         }
     }
@@ -187,7 +190,9 @@ fun WiomButton(
  * @param checked Whether the user has acknowledged.
  * @param onCheckedChange Toggle handler.
  * @param modifier Modifier; callers typically `fillMaxWidth()`.
- * @param enabled When false the whole row is dimmed and non-interactive.
+ * @param enabled When false the row is non-interactive and the checkbox softens to
+ *   `stroke.subtle`. The label stays `text.default` per skill §4.6 — only the
+ *   indicator dims, not the copy.
  */
 @Composable
 fun WiomAcknowledge(
@@ -197,20 +202,22 @@ fun WiomAcknowledge(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val rowAlpha = if (enabled) 1f else 0.4f
     Row(
         modifier = modifier
-            .alpha(rowAlpha)
             .clickable(enabled = enabled, role = Role.Checkbox) { onCheckedChange(!checked) }
             .padding(vertical = WiomTheme.spacing.xs),
         horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
-        AcknowledgeIndicator(checked = checked)
+        WiomCheckbox(
+            selection = if (checked) WiomCheckboxSelection.Selected else WiomCheckboxSelection.No,
+            state = if (enabled) WiomIndicatorState.Default else WiomIndicatorState.Disabled,
+            onToggle = { onCheckedChange(!checked) },
+        )
         Text(
             text = text,
-            style = WiomTheme.type.bodyMd,
-            color = if (enabled) WiomTheme.color.text.default else WiomTheme.color.text.disabled,
+            style = WiomTheme.type.labelLg,
+            color = WiomTheme.color.text.default,
         )
     }
 }
@@ -302,35 +309,6 @@ private fun buttonVisuals(
                 borderColor = null,
             )
         }
-    }
-}
-
-@Composable
-private fun AcknowledgeIndicator(checked: Boolean) {
-    val shape = RoundedCornerShape(WiomTheme.radius.tiny)
-    val size = 20.dp
-    if (checked) {
-        Box(
-            modifier = Modifier
-                .size(size)
-                .clip(shape)
-                .background(WiomTheme.color.bg.brand, shape),
-            contentAlignment = Alignment.Center,
-        ) {
-            WiomIcon(
-                imageVector = Icons.Rounded.Check,
-                contentDescription = null,
-                tint = WiomTheme.color.icon.inverse,
-                size = 14.dp, // ~65% of 20dp indicator per skill
-            )
-        }
-    } else {
-        Box(
-            modifier = Modifier
-                .size(size)
-                .clip(shape)
-                .border(WiomTheme.stroke.medium, WiomTheme.color.stroke.strong, shape),
-        )
     }
 }
 

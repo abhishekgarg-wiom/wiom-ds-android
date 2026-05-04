@@ -12,7 +12,7 @@ Tell the user *that work is in progress* when we cannot tell them *how far along
 |---|---|
 | Inline wait (button, input, card) | `WiomSpinner` |
 | Layout-known content arriving (list, card) | `WiomSkeletonLine` / `WiomSkeletonCard` / `WiomSkeletonListItem` |
-| Full-screen blocking wait (splash, payment) | `WiomBlockingLoader` |
+| Full-screen blocking wait (splash, payment) | `WiomBrandLoader` |
 
 For outcome-driven waits that must end in success or error (payment, KYC upload), the skill calls for a dedicated `Loader/Status` ring — not shipped in this package, will come with the Status loader work.
 
@@ -66,14 +66,14 @@ Tokens:
 
 Shimmer is a 1.2s horizontal gradient sweep. Pass `animation = WiomSkeletonAnimation.Static` to disable it for high-density skeleton grids.
 
-### `WiomBlockingLoader`
+### `WiomBrandLoader`
 
 Full-screen wait that covers the parent and swallows touch events.
 
 ```kotlin
-WiomBlockingLoader(style = WiomBlockingLoaderStyle.Light, message = "Loading…")
-WiomBlockingLoader(style = WiomBlockingLoaderStyle.OnBrand, message = "Getting things ready…")
-WiomBlockingLoader(style = WiomBlockingLoaderStyle.Overlay, message = "Processing your payment…")
+WiomBrandLoader(style = WiomBrandLoaderStyle.Light, message = "Loading…")
+WiomBrandLoader(style = WiomBrandLoaderStyle.OnBrand, message = "Getting things ready…")
+WiomBrandLoader(style = WiomBrandLoaderStyle.Overlay, message = "Processing your payment…")
 ```
 
 | `style` | Surface | Spinner tone | Message color |
@@ -94,13 +94,14 @@ WiomBlockingLoader(style = WiomBlockingLoaderStyle.Overlay, message = "Processin
 ## Skill-vs-foundation flags
 
 - The skill calls the brand spinner track `bg.brand.subtle`; foundation token is `bg.brandSubtle`. Identical color, style-only path drift in the skill.
-- The skill's **Brand loader** is built around a bespoke infinity vector at Figma node `2068:48`. We use `Icons.Rounded.AllInclusive` as the closest canonical stand-in so we don't import a one-off drawable into `res/drawable/` (which is reserved for `ic_wiom_*` / `ic_partner_*`). When the branded vector asset is added to the drawable set, swap the glyph in `WiomBlockingLoader` and surface a `WiomIcons.infinity` facade entry.
-- The skill ships a **Status ring** (Wait → Success → Error) and a **Typing dots** variant. Neither is in this build — they're out of scope for the v1.0 loader deliverable. Add them alongside an outcome-aware API (e.g. `WiomStatusLoader(state: Wait/Success/Error)`) and chat-bubble composite in a later release.
+- The skill's **Brand loader** is built around a bespoke infinity vector at Figma node `2068:48`. We use `Icons.Rounded.AllInclusive` as the closest canonical stand-in so we don't import a one-off drawable into `res/drawable/` (which is reserved for `ic_wiom_*` / `ic_partner_*`). When the branded vector asset is added to the drawable set, swap the glyph in `WiomBrandLoader` and surface a `WiomIcons.infinity` facade entry.
+- The skill ships a **Status ring** (Wait → Success → Error). Not in this build — tracked for a later release alongside an outcome-aware API (e.g. `WiomStatusLoader(state: Wait/Success/Error)`).
 - The skill quotes `bg.warning.subtle = #FFE9A1` under the Typing dots spec. Foundation is `#FFF2BF`. Skill drift; unused here but flagged for the skill author.
 
 ## Known gaps
 
-- No Typing dots (chat).
 - No Status ring (Wait → Success / Error). Deferred.
-- Brand loader uses `Icons.Rounded.AllInclusive` until a branded infinity asset lands.
+- Brand loader currently renders a "Wiom" wordmark + spinner. When the branded infinity vector lands in `res/drawable/`, swap the wordmark out.
 - Skeleton shimmer is a plain gradient (no elastic ease, no left/right selection). Matches the skill's "pending motion decision".
+
+Typing dots (`WiomDots`) and short-wait linear progress (`WiomLinearProgress`) ship in v2.0.0 — see `WiomLoader.kt`.

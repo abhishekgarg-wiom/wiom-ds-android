@@ -51,7 +51,7 @@ enum class WiomSwitchState { Default, Disabled }
 // -----------------------------------------------------------------------------
 
 /**
- * Wiom checkbox indicator — 20×20 dp, `radius.tiny`.
+ * Wiom checkbox indicator — 24×24 dp, `radius.tiny`.
  *
  * No label, no helper, no row chrome — those live on `WiomListItem` (or the
  * inline form parent like [WiomAcknowledge][com.wiom.designsystem.component.button.WiomAcknowledge]).
@@ -60,7 +60,9 @@ enum class WiomSwitchState { Default, Disabled }
  * States: `Default` / `Disabled` / `Error`. On `Error + Selected/Indeterminate`
  * the fill swaps from `bg.brand` to `bg.critical`.
  *
- * Size is fixed at 20dp — do NOT pass width/height in [modifier].
+ * Size is fixed at 24dp — do NOT pass width/height in [modifier]. Material's
+ * Check/Remove glyphs have intrinsic ~2dp internal padding, so a 24dp icon
+ * centred in a 24dp Box renders at the right visual density (~20dp visible).
  */
 @Composable
 fun WiomCheckbox(
@@ -82,7 +84,7 @@ fun WiomCheckbox(
 
     Box(
         modifier = modifier
-            .size(20.dp)
+            .size(24.dp)
             .then(tap)
             .then(checkboxSurface(selection, state, shape)),
         contentAlignment = Alignment.Center,
@@ -92,13 +94,13 @@ fun WiomCheckbox(
                 imageVector = Icons.Rounded.Check,
                 contentDescription = null,
                 tint = glyphTint(state),
-                size = 14.dp, // ~65% of 20dp
+                size = WiomTheme.iconSize.md, // 24dp glyph in 24dp box — Material adds ~2dp intrinsic pad
             )
             WiomCheckboxSelection.Indeterminate -> WiomIcon(
                 imageVector = Icons.Rounded.Remove,
                 contentDescription = null,
                 tint = glyphTint(state),
-                size = 14.dp,
+                size = WiomTheme.iconSize.md,
             )
             WiomCheckboxSelection.No -> Unit
         }
@@ -139,7 +141,7 @@ private fun checkboxSurface(
 // -----------------------------------------------------------------------------
 
 /**
- * Wiom radio indicator — 20×20 dp, circular.
+ * Wiom radio indicator — 24×24 dp, circular.
  *
  * Always used in a group of 2+. Standalone radio is an anti-pattern. Inner dot
  * (10×10) visible only when [selected].
@@ -187,7 +189,7 @@ fun WiomRadio(
 
     Box(
         modifier = modifier
-            .size(20.dp)
+            .size(24.dp)
             .then(tap)
             .then(surface),
         contentAlignment = Alignment.Center,

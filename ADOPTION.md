@@ -35,7 +35,7 @@ dependencyResolutionManagement {
 In `app/build.gradle.kts`:
 ```kotlin
 dependencies {
-    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v1.0.4")
+    implementation("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem:v2.0.0")
 }
 ```
 
@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 In `app/build.gradle.kts` (or the module where you lint Compose code):
 ```kotlin
 dependencies {
-    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v1.0.4")
+    detektPlugins("com.github.abhishekgarg-wiom.wiom-ds-android:designsystem-rules:v2.0.0")
 }
 ```
 
@@ -112,15 +112,14 @@ Review should treat the ADR as the main discussion, not the code diff.
 
 ---
 
-## When to upgrade the library
+## When a new Wiom version ships
 
-When a new Wiom version ships:
-- Read the CHANGELOG for breaking changes.
+- Read the CHANGELOG for what changed.
 - Bump the version in your `build.gradle.kts`.
 - Sync. Fix anything the Kotlin compiler flags.
-- Exercise your migrated screens; flag regressions as issues on the Wiom repo.
+- Exercise the touched screens; flag regressions as issues on the Wiom repo.
 
-v1.0.0 uses the **element-first token API** (`WiomTheme.color.bg.*` / `.text.*` / `.stroke.*` / `.icon.*`). Older versions (v0.3.0 and below) used role-first (`WiomTheme.colors.brand.primary`). If you're upgrading from v0.3.x, expect to update every token call site.
+The library uses an **element-first token API** (`WiomTheme.color.bg.*` / `.text.*` / `.stroke.*` / `.icon.*`) — see the four namespaces in step 4 above. Stick to those; never reach for raw hex / sp / dp in feature code.
 
 ---
 

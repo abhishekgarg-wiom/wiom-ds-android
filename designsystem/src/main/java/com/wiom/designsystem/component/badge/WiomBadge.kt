@@ -55,14 +55,15 @@ fun WiomBadgeDot(
 // Count
 // -----------------------------------------------------------------------------
 
-/** Tone for [WiomBadgeCount]. Count is always loud — Brand or Critical. */
-enum class WiomBadgeCountTone { Brand, Critical }
+/** Tone for [WiomBadgeCount]. Three ship tones per spec: Brand, Critical, Neutral. */
+enum class WiomBadgeCountTone { Brand, Critical, Neutral }
 
 /**
  * Numeric count badge.
  *
  * - Hidden at `count <= 0` (renders nothing). Never shows "0".
- * - Caps display per [cap] (default 9 → "9+"; pass 99 for two-digit caps).
+ * - Caps display per [cap] (default 99 → "99+"; pass 9 for single-digit "9+" caps).
+ * - 20×20 dp container that grows horizontally for "9+" / "99+".
  * - `type.metaXs` (10 sp) — one of the few places sub-14sp is allowed (skill
  *   allowance for badge counts).
  *
@@ -74,22 +75,24 @@ fun WiomBadgeCount(
     count: Int,
     tone: WiomBadgeCountTone,
     modifier: Modifier = Modifier,
-    cap: Int = 9,
+    cap: Int = 99,
 ) {
     if (count <= 0) return
     val label = if (count > cap) "$cap+" else count.toString()
     val fill = when (tone) {
         WiomBadgeCountTone.Brand -> WiomTheme.color.bg.brand
         WiomBadgeCountTone.Critical -> WiomTheme.color.bg.critical
+        WiomBadgeCountTone.Neutral -> WiomTheme.color.bg.muted
     }
     val textColor = when (tone) {
         WiomBadgeCountTone.Brand -> WiomTheme.color.text.onBrand
         WiomBadgeCountTone.Critical -> WiomTheme.color.text.onCritical
+        WiomBadgeCountTone.Neutral -> WiomTheme.color.text.subtle
     }
     val shape = RoundedCornerShape(WiomTheme.radius.full)
     Box(
         modifier = modifier
-            .defaultMinSize(minWidth = 18.dp, minHeight = 18.dp)
+            .defaultMinSize(minWidth = 20.dp, minHeight = 20.dp)
             .clip(shape)
             .background(color = fill, shape = shape)
             .padding(horizontal = WiomTheme.spacing.xs),
@@ -206,7 +209,7 @@ private fun labelPalette(tone: WiomBadgeLabelTone, style: WiomBadgeLabelStyle): 
             WiomBadgeLabelTone.Positive -> LabelPalette(c.bg.positive, c.text.onPositive)
             WiomBadgeLabelTone.Warning -> LabelPalette(c.bg.warning, c.text.onWarning)
             WiomBadgeLabelTone.Critical -> LabelPalette(c.bg.critical, c.text.onCritical)
-            WiomBadgeLabelTone.Info -> LabelPalette(c.bg.info, c.text.inverse)
+            WiomBadgeLabelTone.Info -> LabelPalette(c.bg.info, c.text.onInfo)
             WiomBadgeLabelTone.Neutral -> LabelPalette(c.bg.muted, c.text.subtle)
             // Brand is a Tinted-only tone per skill. Fall back to Brand + Tinted.
             WiomBadgeLabelTone.Brand -> LabelPalette(c.bg.brandSubtle, c.text.brand)

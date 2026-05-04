@@ -26,6 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronRight
+import com.wiom.designsystem.component.iconbadge.WiomIconBadge
+import com.wiom.designsystem.component.iconbadge.WiomIconBadgeSize
+import com.wiom.designsystem.component.iconbadge.WiomIconBadgeTone
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -118,7 +121,6 @@ enum class WiomBottomSheetSize {
     Expanded,
     Full,
     Illustration,
-    IllustrationCta,
     IllustrationLeft,
     Share,
     Form;
@@ -132,7 +134,6 @@ enum class WiomBottomSheetSize {
         Expanded -> Modifier.heightIn(min = 600.dp)
         Full -> Modifier.fillMaxWidth()
         Illustration,
-        IllustrationCta,
         IllustrationLeft,
         Share,
         Form,
@@ -178,6 +179,9 @@ fun WiomBottomSheetHeader(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    leadingIcon: ImageVector? = null,
+    trailingActionLabel: String? = null,
+    onTrailingActionClick: (() -> Unit)? = null,
 ) {
     val colors = WiomTheme.color
     val type = WiomTheme.type
@@ -185,27 +189,50 @@ fun WiomBottomSheetHeader(
     val stroke = WiomTheme.stroke
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Column(
+        // V2 §2: Header padding 8T · 16R · 16B · 16L · slot gap space-12.
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = spacing.xl,
+                    start = spacing.lg,
                     end = spacing.lg,
-                    top = spacing.xs,
-                    bottom = spacing.md,
+                    top = spacing.sm,
+                    bottom = spacing.lg,
                 ),
-            verticalArrangement = Arrangement.spacedBy(spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.md),
         ) {
-            Text(
-                text = title,
-                style = type.headingLg,
-                color = colors.text.default,
-            )
-            if (subtitle != null) {
+            if (leadingIcon != null) {
+                WiomIcon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    size = WiomTheme.iconSize.md,
+                    tint = colors.icon.nonAction,
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(spacing.xs),
+            ) {
                 Text(
-                    text = subtitle,
-                    style = type.bodyMd,
-                    color = colors.text.subtle,
+                    text = title,
+                    style = type.headingMd,
+                    color = colors.text.default,
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = type.bodySm,
+                        color = colors.text.subtle,
+                    )
+                }
+            }
+            if (trailingActionLabel != null && onTrailingActionClick != null) {
+                Text(
+                    text = trailingActionLabel,
+                    style = type.labelMd,
+                    color = colors.text.brand,
+                    modifier = Modifier.clickable(onClick = onTrailingActionClick),
                 )
             }
         }
@@ -267,7 +294,7 @@ fun WiomBottomSheetListItem(
         Column(
             modifier = Modifier
                 .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(spacing.xxs),
+            verticalArrangement = Arrangement.spacedBy(spacing.xs),
         ) {
             Text(
                 text = label,
@@ -304,56 +331,67 @@ fun WiomBottomSheetIllustration(
     heading: String,
     subtext: String,
     modifier: Modifier = Modifier,
+    tone: WiomIconBadgeTone = WiomIconBadgeTone.Brand,
+    leftAligned: Boolean = false,
 ) {
     val colors = WiomTheme.color
     val type = WiomTheme.type
     val spacing = WiomTheme.spacing
-    val radius = WiomTheme.radius
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                start = spacing.xl,
-                end = spacing.xl,
-                top = spacing.lg,
-                bottom = spacing.xl,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(spacing.lg),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(120.dp)
-                .background(
-                    color = colors.bg.brandSubtle,
-                    shape = RoundedCornerShape(radius.full),
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            WiomIcon(
-                imageVector = icon,
-                contentDescription = null,
-                size = WiomTheme.iconSize.lg,
-                tint = colors.icon.brand,
-            )
-        }
+    // V2 §2: Block padding `pt-16 · pb-48 · px-16` · gap-24 between badge and text · gap-12
+    // between heading and subtext. Badge is 96 dp `WiomIconBadge.Lg` (tone-swappable).
+    val outerPadding: Modifier = Modifier
+        .fillMaxWidth()
+        .padding(
+            start = spacing.lg,
+            end = spacing.lg,
+            top = spacing.lg,
+            bottom = spacing.huge,
+        )
+    val badge = @Composable {
+        WiomIconBadge(
+            icon = icon,
+            size = WiomIconBadgeSize.Lg,
+            tone = tone,
+        )
+    }
+    val text = @Composable {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.sm),
+            horizontalAlignment = if (leftAligned) Alignment.Start else Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.md),
         ) {
             Text(
                 text = heading,
-                style = type.headingLg,
+                style = type.headingMd,
                 color = colors.text.default,
-                textAlign = TextAlign.Center,
+                textAlign = if (leftAligned) TextAlign.Start else TextAlign.Center,
             )
             Text(
                 text = subtext,
-                style = type.bodyLg,
+                style = type.bodyMd,
                 color = colors.text.subtle,
-                textAlign = TextAlign.Center,
+                textAlign = if (leftAligned) TextAlign.Start else TextAlign.Center,
             )
+        }
+    }
+
+    if (leftAligned) {
+        Row(
+            modifier = modifier.then(outerPadding),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(spacing.xl),
+        ) {
+            badge()
+            Box(modifier = Modifier.weight(1f)) { text() }
+        }
+    } else {
+        Column(
+            modifier = modifier.then(outerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.xl),
+        ) {
+            badge()
+            text()
         }
     }
 }
@@ -370,24 +408,18 @@ fun WiomBottomSheetActions(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val colors = WiomTheme.color
     val spacing = WiomTheme.spacing
-    val stroke = WiomTheme.stroke
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        HorizontalDivider(
-            thickness = stroke.small,
-            color = colors.stroke.subtle,
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.xl, vertical = spacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.md),
-            content = content,
-        )
-    }
+    // V2 §2: action-bar padding `pb-16 · px-16 · pt-0`; **no top border**.
+    // The Content's `pb-48` (caller-controlled) is the loose-gap separator.
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = spacing.lg, end = spacing.lg, bottom = spacing.lg),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.md),
+        content = content,
+    )
 }
 
 // region Previews — one per size variant. No real sheet state; we render the
@@ -497,9 +529,9 @@ private fun PreviewIllustration() {
     }
 }
 
-@Preview(name = "IllustrationCta", showBackground = true)
+@Preview(name = "Illustration · payment confirm", showBackground = true)
 @Composable
-private fun PreviewIllustrationCta() {
+private fun PreviewIllustrationPay() {
     PreviewFrame {
         WiomBottomSheetIllustration(
             icon = Icons.Rounded.Payment,
@@ -507,7 +539,6 @@ private fun PreviewIllustrationCta() {
             subtext = "Monthly recharge for Plan A. Amount will be debited from your UPI account.",
         )
         WiomBottomSheetActions {
-            // Caller places WiomButton instances here. Preview shows the frame.
             Spacer(modifier = Modifier.weight(1f))
         }
     }
@@ -517,50 +548,13 @@ private fun PreviewIllustrationCta() {
 @Composable
 private fun PreviewIllustrationLeft() {
     PreviewFrame {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = WiomTheme.spacing.xl,
-                    end = WiomTheme.spacing.xl,
-                    top = WiomTheme.spacing.lg,
-                    bottom = WiomTheme.spacing.xl,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.lg),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .background(
-                        color = WiomTheme.color.bg.brandSubtle,
-                        shape = RoundedCornerShape(WiomTheme.radius.full),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                WiomIcon(
-                    imageVector = Icons.Rounded.Share,
-                    contentDescription = null,
-                    size = WiomTheme.iconSize.lg,
-                    tint = WiomTheme.color.icon.brand,
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
-            ) {
-                Text(
-                    text = "Share your plan",
-                    style = WiomTheme.type.headingLg,
-                    color = WiomTheme.color.text.default,
-                )
-                Text(
-                    text = "Invite friends to Wiom with a one-tap share link.",
-                    style = WiomTheme.type.bodyLg,
-                    color = WiomTheme.color.text.subtle,
-                )
-            }
-        }
+        WiomBottomSheetIllustration(
+            icon = Icons.Rounded.Share,
+            heading = "Share your plan",
+            subtext = "Invite friends to Wiom with a one-tap share link.",
+            tone = WiomIconBadgeTone.Brand,
+            leftAligned = true,
+        )
     }
 }
 

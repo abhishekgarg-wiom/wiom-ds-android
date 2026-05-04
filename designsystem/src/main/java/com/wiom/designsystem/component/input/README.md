@@ -187,7 +187,7 @@ WiomInput(
 
 ### Dropdown-replacement pattern
 
-`WiomDropdown` was removed in v1.0.0. Use `WiomInput(readOnly = true)` + chevron trailing +
+`WiomDropdown` is not a separate component. Use `WiomInput(readOnly = true)` + chevron trailing +
 `onClick` to open a `WiomBottomSheet` picker.
 
 ```kotlin

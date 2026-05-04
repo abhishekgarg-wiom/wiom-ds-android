@@ -43,23 +43,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Toast status family.
+ * Toast status family. V2 ship — all 4 types share `bg.default`; only the leading icon
+ * (and Warning's body text) carries the type's status colour.
  *
- * - [Neutral] : dark inverse surface. Used for the classic "fire-and-forget"
- *   feedback where no status is implied. Equivalent of the Material dark snackbar.
- * - [Positive] : success surface. Use sparingly per app constitution —
- *   only when the user genuinely needs confirmation (e.g. wallet withdrawal sent).
- * - [Critical] : error surface. Use for server-rejected / failed actions.
- * - [Warning] : non-blocking caution (offline, degraded). One-token family;
- *   body + heading share [WiomColors.Text.onWarning] (#372902 olive).
- * - [Info] : neutral state change, purely informational.
+ * - [Critical] — server-rejected / failed actions.
+ * - [Warning] — non-blocking caution (offline, degraded). One-token family — body and
+ *   action share `text.onWarning` (the dark olive).
+ * - [Info] — neutral state change, purely informational. Use this for fire-and-forget
+ *   feedback ("Draft saved", "Status updated") — there's no separate dark-snackbar variant;
+ *   all toasts share the light `bg.default` surface, only the icon carries the status colour.
+ * - [Positive] — success outcome. Use sparingly per Wiom Constitution; only when the
+ *   user genuinely needs confirmation (e.g. wallet withdrawal sent). Never for money
+ *   moments — those need a confirmable surface, not a transient toast.
  */
 enum class WiomToastStatus {
-    Neutral,
-    Positive,
     Critical,
     Warning,
     Info,
+    Positive,
 }
 
 /**
@@ -99,15 +100,15 @@ fun WiomToast(
     onClose: (() -> Unit)? = null,
 ) {
     val visuals = toastVisuals(status)
-    val shape = RoundedCornerShape(WiomTheme.radius.medium)
+    val shape = RoundedCornerShape(WiomTheme.radius.small)
 
     Row(
         modifier = modifier
             .shadow(elevation = WiomTheme.shadow.lg, shape = shape, clip = false)
             .clip(shape)
             .background(visuals.fill, shape)
-            .padding(WiomTheme.spacing.lg),
-        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.md),
+            .padding(horizontal = WiomTheme.spacing.lg, vertical = WiomTheme.spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(WiomTheme.spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         WiomIcon(
@@ -118,7 +119,7 @@ fun WiomToast(
         )
         Text(
             text = message,
-            style = WiomTheme.type.bodyMd,
+            style = WiomTheme.type.bodyLg,
             color = visuals.bodyColor,
             maxLines = 2,
             modifier = Modifier.weight(1f, fill = true),
@@ -141,7 +142,7 @@ fun WiomToast(
                 imageVector = Icons.Rounded.Close,
                 contentDescription = "Dismiss",
                 size = WiomTheme.iconSize.md,
-                tint = visuals.iconTint,
+                tint = WiomTheme.color.icon.action,
                 modifier = Modifier
                     .clip(RoundedCornerShape(WiomTheme.radius.small))
                     .clickable(role = Role.Button, onClick = onClose),
@@ -296,57 +297,51 @@ private data class ToastVisuals(
 @Composable
 private fun toastVisuals(status: WiomToastStatus): ToastVisuals {
     val c = WiomTheme.color
+    // V2: all 4 types share `bg.default`. Only the icon (and Warning's body) carries
+    // the status colour. Action label is always `text.brand`, regardless of type.
     return when (status) {
-        WiomToastStatus.Neutral -> ToastVisuals(
-            fill = c.bg.inverse,
-            bodyColor = c.text.inverse,
-            iconTint = c.icon.inverse,
-            actionColor = c.text.inverse,
-            icon = Icons.Rounded.Info,
-        )
-        WiomToastStatus.Positive -> ToastVisuals(
-            fill = c.bg.positiveSubtle,
-            bodyColor = c.text.default,
-            iconTint = c.icon.positive,
-            actionColor = c.text.brand,
-            icon = Icons.Rounded.CheckCircle,
-        )
         WiomToastStatus.Critical -> ToastVisuals(
-            fill = c.bg.criticalSubtle,
-            // Body on Critical banners uses text.default per CLAUDE.md § 6.
+            fill = c.bg.default,
             bodyColor = c.text.default,
             iconTint = c.icon.critical,
             actionColor = c.text.brand,
             icon = Icons.Rounded.Error,
         )
         WiomToastStatus.Warning -> ToastVisuals(
-            fill = c.bg.warningSubtle,
-            // Warning is one-token — body and action share text.onWarning.
+            fill = c.bg.default,
+            // Warning is one-token — body shares `text.onWarning` per foundations.
             bodyColor = c.text.onWarning,
             iconTint = c.icon.warning,
-            actionColor = c.text.onWarning,
+            actionColor = c.text.brand,
             icon = Icons.Rounded.Warning,
         )
         WiomToastStatus.Info -> ToastVisuals(
-            fill = c.bg.infoSubtle,
+            fill = c.bg.default,
             bodyColor = c.text.default,
             iconTint = c.icon.info,
             actionColor = c.text.brand,
             icon = Icons.Rounded.Info,
+        )
+        WiomToastStatus.Positive -> ToastVisuals(
+            fill = c.bg.default,
+            bodyColor = c.text.default,
+            iconTint = c.icon.positive,
+            actionColor = c.text.brand,
+            icon = Icons.Rounded.CheckCircle,
         )
     }
 }
 
 // ---- Previews ---------------------------------------------------------------
 
-@Preview(name = "Toast — Neutral", showBackground = true, backgroundColor = 0xFFFAF9FC, widthDp = 360)
+@Preview(name = "Toast — Info (fire-and-forget)", showBackground = true, backgroundColor = 0xFFFAF9FC, widthDp = 360)
 @Composable
-private fun PreviewToastNeutral() {
+private fun PreviewToastInfoFireForget() {
     WiomTheme {
         WiomToast(
-            status = WiomToastStatus.Neutral,
+            status = WiomToastStatus.Info,
             message = "Draft saved",
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
@@ -358,7 +353,7 @@ private fun PreviewToastPositive() {
         WiomToast(
             status = WiomToastStatus.Positive,
             message = "Nikaasi safal rahi",
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
@@ -370,7 +365,7 @@ private fun PreviewToastCritical() {
         WiomToast(
             status = WiomToastStatus.Critical,
             message = "Server ne request reject kiya",
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
@@ -382,7 +377,7 @@ private fun PreviewToastWarning() {
         WiomToast(
             status = WiomToastStatus.Warning,
             message = "Offline — purana data dikh raha hai",
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
@@ -394,7 +389,7 @@ private fun PreviewToastInfo() {
         WiomToast(
             status = WiomToastStatus.Info,
             message = "Status update ho gayi",
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
@@ -407,20 +402,20 @@ private fun PreviewToastActionable() {
             status = WiomToastStatus.Critical,
             message = "Call failed",
             action = WiomToastAction(label = "Retry", onClick = { }),
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
 
-@Preview(name = "Toast — Undo (Neutral)", showBackground = true, backgroundColor = 0xFFFAF9FC, widthDp = 360)
+@Preview(name = "Toast — Undo (Info)", showBackground = true, backgroundColor = 0xFFFAF9FC, widthDp = 360)
 @Composable
 private fun PreviewToastUndo() {
     WiomTheme {
         WiomToast(
-            status = WiomToastStatus.Neutral,
+            status = WiomToastStatus.Info,
             message = "Ticket delete kiya",
             action = WiomToastAction(label = "Undo", onClick = { }),
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
@@ -433,7 +428,7 @@ private fun PreviewToastPersistent() {
             status = WiomToastStatus.Warning,
             message = "Offline — purana data dikh raha hai",
             onClose = { },
-            modifier = Modifier.padding(WiomTheme.spacing.sm),
+            modifier = Modifier.padding(WiomTheme.spacing.lg),
         )
     }
 }
