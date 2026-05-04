@@ -3,6 +3,21 @@
 All notable changes to the Wiom Design System (Android) will be documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] — 2026-05-04
+
+Patch release. No public API change.
+
+### Fixed
+
+- `WiomChip` (`WiomTabsFilters.kt`) — added missing `Icons.Rounded.Close` import; the trailing close glyph on a Selected chip now compiles.
+- `WiomTopBarStatusBar` (`WiomTopBar.kt`) — added missing `androidx.compose.ui.graphics.toArgb` import; status-bar color assignment now compiles.
+- `designsystem/build.gradle.kts` — added `androidx.core:core-ktx` so `androidx.core.view.WindowCompat` resolves inside `WiomTopBarStatusBar`.
+
+### Docs
+
+- Reframed README / ADOPTION / CHANGELOG / CLAUDE / CONTRIBUTING as first-time onboarding (V1 → V2 migration framing dropped — there were no V1 consumers).
+- Recorded the upstream foundation PR that fixed the `Neutral_700` hex drift between primitive and core tokens (`UPSTREAM_SKILL_PRS.md`).
+
 ## [2.0.0] — 2026-05-01
 
 First public release. **15 components** built end-to-end against the Wiom DS V2 skill set in [`wiom-design-system`](https://github.com/abhishekgarg-wiom/wiom-design-system) (locked SHA `ed110b6`). Element-first tokens throughout. Material 3 `Icons.Rounded.*` (incl. `AutoMirrored.Rounded.*` for directional glyphs). Min SDK 24.
